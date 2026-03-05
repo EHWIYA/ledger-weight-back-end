@@ -46,6 +46,35 @@ class TurnManager:
         if self.game.state != GameState.IN_PROGRESS:
             return False
         
+        # 영업 금지(Jail) 처리: 턴 시작 전에 판정 수행
+        jail_card = player.equipment.get("jail") if hasattr(player, "equipment") else None
+        if jail_card:
+            # 영업 금지 카드는 판정 후 버림
+            removed_jail = player.equipment.pop("jail", None)
+            if removed_jail:
+                self.card_manager.discard_card(removed_jail)
+            
+            # 판정 카드 1장 뽑기 (문양이 '치유'(HEARTS)면 성공, 아니면 실패)
+            if self.card_manager.get_deck_count() == 0:
+                self.card_manager.reshuffle_discard_pile()
+            
+            judgement_success = False
+            judgement_card = self.card_manager.draw_card()
+            if judgement_card:
+                self.card_manager.discard_card(judgement_card)
+                if judgement_card.suit == Suit.HEARTS:
+                    judgement_success = True
+            
+            if not judgement_success:
+                # 판정 실패: 이 턴 전체를 건너뛰고 다음 플레이어로 이동
+                self.game.set_current_player(player.id)
+                self.game.set_turn_state(TurnState.END_TURN)
+                self.game.add_event(
+                    f"{player.name}이(가) 영업 금지 판정에 실패하여 이번 턴을 건너뜁니다.",
+                    "action",
+                )
+                return self.move_to_next_player()
+        
         # 턴별 정산/보호 관련 상태 초기화
         self.game.turn_attack_counters.clear()
         self.game.defending_player_id = None
@@ -244,9 +273,26 @@ class TurnManager:
         
         # 핸드 카드 수 제한 체크 (재력보다 많으면 버려야 함)
         max_hand_size = player.hp
-        if player.get_hand_count() > max_hand_size:
-            # TODO: 초과 카드 버리기 로직 (향후 구현)
-            pass
+        hand_count = player.get_hand_count()
+        if hand_count > max_hand_size:
+            # 초과 카드 자동 버리기: 손패 뒤에서부터 버림 더미로 이동
+            excess = hand_count - max_hand_size
+            # 현재 손패 스냅샷 기준으로 뒤에서부터 초과분 선택
+            hand_snapshot = list(player.hand)
+            cards_to_discard = hand_snapshot[-excess:]
+            
+            discarded_count = 0
+            for card in cards_to_discard:
+                removed = player.remove_card(card.id)
+                if removed:
+                    self.card_manager.discard_card(removed)
+                    discarded_count += 1
+            
+            if discarded_count > 0:
+                self.game.add_event(
+                    f"{player.name}이(가) 최대 손패 제한을 초과하여 카드 {discarded_count}장을 버렸습니다.",
+                    "action",
+                )
         
         # 턴 종료 상태로 변경
         self.game.set_turn_state(TurnState.END_TURN)

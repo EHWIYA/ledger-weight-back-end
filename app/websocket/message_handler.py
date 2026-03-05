@@ -195,6 +195,11 @@ class MessageHandler:
                 "bottom_card_id": action.get("bottomCardId"),
             }
             result = action_handler.handle_action(action_type, player_id, data)
+        elif action_type == ActionType.GENERAL_STORE_PICK:
+            data = {
+                "card_id": action.get("cardId"),
+            }
+            result = action_handler.handle_action(action_type, player_id, data)
         else:
             return self._error(
                 message=f"지원하지 않는 액션 타입: {action_type_str}",

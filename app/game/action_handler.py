@@ -166,6 +166,8 @@ class ActionHandler:
             return self.handle_select_steal_card(player_id, data)
         elif action_type == ActionType.SELECT_DRAW_ORDER:
             return self.handle_select_draw_order(player_id, data)
+        elif action_type == ActionType.GENERAL_STORE_PICK:
+            return self.handle_general_store_pick(player_id, data)
         else:
             return {
                 "success": False,
@@ -236,6 +238,34 @@ class ActionHandler:
             return self.handle_beer_card(player_id, card)
         elif card.card_type == CardType.PANIC:
             return self.handle_panic_card(player_id, card, target_id)
+        elif card.is_weapon():
+            return self.handle_equip_card(player_id, card, slot="weapon")
+        elif card.is_equipment():
+            # 카드 타입별 장착 슬롯 매핑
+            slot_map = {
+                CardType.SCOPE: "scope",
+                CardType.BARREL: "barrel",
+                CardType.MUSTANG: "mustang",
+                CardType.JAIL: "jail",
+            }
+            slot = slot_map.get(card.card_type)
+            if not slot:
+                return {
+                    "success": False,
+                    "message": f"장착 슬롯이 정의되지 않은 카드 타입: {card.card_type.value}",
+                    "event": None,
+                }
+            return self.handle_equip_card(player_id, card, slot=slot)
+        elif card.card_type == CardType.GATLING:
+            return self.handle_gatling_card(player_id, card)
+        elif card.card_type == CardType.INDIANS:
+            return self.handle_indians_card(player_id, card)
+        elif card.card_type == CardType.DUEL:
+            return self.handle_duel_card(player_id, card, target_id)
+        elif card.card_type == CardType.SALOON:
+            return self.handle_saloon_card(player_id, card)
+        elif card.card_type == CardType.GENERAL_STORE:
+            return self.handle_general_store_card(player_id, card)
         else:
             return {
                 "success": False,
@@ -388,6 +418,15 @@ class ActionHandler:
             return {
                 "success": False,
                 "message": "플레이어를 찾을 수 없습니다.",
+                "event": None,
+            }
+        
+        # 원작 규칙: 마지막 두 명만 남은 상황에서는 Beer 사용 불가
+        alive_players = self.game.get_alive_players()
+        if len(alive_players) <= 2:
+            return {
+                "success": False,
+                "message": "마지막 두 명만 남은 상황에서는 비상금을 사용할 수 없습니다.",
                 "event": None,
             }
         
@@ -548,6 +587,496 @@ class ActionHandler:
             "event": None,
         }
     
+    def handle_equip_card(self, player_id: str, card: Card, slot: str) -> Dict:
+        """
+        무기/장착 카드를 장착합니다.
+        - 기존 해당 슬롯에 카드가 있으면 버림 더미로 보냅니다.
+        """
+        player = self.game.get_player(player_id)
+        if not player:
+            return {
+                "success": False,
+                "message": "플레이어를 찾을 수 없습니다.",
+                "event": None,
+            }
+        
+        # 손패에서 카드 제거
+        removed_card = player.remove_card(card.id)
+        if not removed_card:
+            return {
+                "success": False,
+                "message": "카드를 제거할 수 없습니다.",
+                "event": None,
+            }
+        
+        # 기존 장착 카드 처리
+        old_card = player.equip_card(slot, removed_card)
+        if old_card:
+            self.card_manager.discard_card(old_card)
+        
+        # 화수분 (수지 라파예트): 손패가 0장이 되면 2장 드로우
+        self._trigger_suzy_if_needed(player)
+        
+        self.game.add_event(
+            f"{player.name}이(가) '{removed_card.name}' 카드를 장착했습니다.",
+            "action",
+        )
+        
+        return {
+            "success": True,
+            "message": f"{removed_card.name} 카드를 장착했습니다.",
+            "event": self.game.last_event,
+        }
+    
+    def handle_gatling_card(self, player_id: str, card: Card) -> Dict:
+        """
+        전원 견제 (GATLING) 카드 사용을 처리합니다.
+        - 자신을 제외한 모든 플레이어에게 1점 피해를 시도합니다.
+        - 각 플레이어는 손패에 회피 카드가 있으면 자동으로 1장 사용하여 피해를 무효화합니다.
+        """
+        attacker = self.game.get_player(player_id)
+        if not attacker:
+            return {
+                "success": False,
+                "message": "플레이어를 찾을 수 없습니다.",
+                "event": None,
+            }
+        
+        # 카드 제거 및 버리기
+        removed_card = attacker.remove_card(card.id)
+        if not removed_card:
+            return {
+                "success": False,
+                "message": "카드를 제거할 수 없습니다.",
+                "event": None,
+            }
+        self.card_manager.discard_card(removed_card)
+        self._trigger_suzy_if_needed(attacker)
+        
+        # 모든 다른 플레이어에게 공격 시도
+        targets = [p for p in self.game.get_alive_players() if p.id != attacker.id]
+        for target in targets:
+            if not target.is_alive:
+                continue
+            
+            # 회피 카드가 있으면 자동 사용
+            player_treasure = getattr(target, "treasure", None)
+            has_calamity_treasure = player_treasure == "반전 금화"
+            candidate_card: Optional[Card] = None
+            for c in target.hand:
+                if c.is_missed() or (has_calamity_treasure and c.is_bang()):
+                    candidate_card = c
+                    break
+            
+            if candidate_card:
+                removed = target.remove_card(candidate_card.id)
+                if removed:
+                    self.card_manager.discard_card(removed)
+                    self._trigger_suzy_if_needed(target)
+                    self.game.add_event(
+                        f"{target.name}이(가) 전원 견제를 회피했습니다.",
+                        "action",
+                    )
+                continue
+            
+            # 회피할 수 없으면 피해 1
+            died = target.take_damage(1)
+            self._handle_damage_result(target, died, cause="전원 견제")
+        
+        event_message = f"{attacker.name}이(가) 전원 견제 카드를 사용했습니다."
+        self.game.add_event(event_message, "action")
+        
+        return {
+            "success": True,
+            "message": "전원 견제 카드를 사용했습니다.",
+            "event": event_message,
+        }
+    
+    def handle_indians_card(self, player_id: str, card: Card) -> Dict:
+        """
+        패거리 습격 (INDIANS) 카드 사용을 처리합니다.
+        - 자신을 제외한 모든 플레이어가 손패에서 정산 카드를 1장 버리거나, 없으면 피해 1을 받습니다.
+        """
+        attacker = self.game.get_player(player_id)
+        if not attacker:
+            return {
+                "success": False,
+                "message": "플레이어를 찾을 수 없습니다.",
+                "event": None,
+            }
+        
+        removed_card = attacker.remove_card(card.id)
+        if not removed_card:
+            return {
+                "success": False,
+                "message": "카드를 제거할 수 없습니다.",
+                "event": None,
+            }
+        self.card_manager.discard_card(removed_card)
+        self._trigger_suzy_if_needed(attacker)
+        
+        targets = [p for p in self.game.get_alive_players() if p.id != attacker.id]
+        for target in targets:
+            if not target.is_alive:
+                continue
+            
+            # 정산 카드가 있으면 자동 사용
+            bang_card: Optional[Card] = None
+            for c in target.hand:
+                if c.is_bang():
+                    bang_card = c
+                    break
+            
+            if bang_card:
+                removed = target.remove_card(bang_card.id)
+                if removed:
+                    self.card_manager.discard_card(removed)
+                    self._trigger_suzy_if_needed(target)
+                    self.game.add_event(
+                        f"{target.name}이(가) 패거리 습격을 방어하기 위해 정산 카드를 1장 사용했습니다.",
+                        "action",
+                    )
+                continue
+            
+            # 방어할 정산 카드가 없으면 피해 1
+            died = target.take_damage(1)
+            self._handle_damage_result(target, died, cause="패거리 습격")
+        
+        event_message = f"{attacker.name}이(가) 패거리 습격 카드를 사용했습니다."
+        self.game.add_event(event_message, "action")
+        
+        return {
+            "success": True,
+            "message": "패거리 습격 카드를 사용했습니다.",
+            "event": event_message,
+        }
+    
+    def handle_duel_card(
+        self,
+        player_id: str,
+        card: Card,
+        target_id: Optional[str],
+    ) -> Dict:
+        """
+        승부 (DUEL) 카드 사용을 처리합니다.
+        - 공격자와 대상이 번갈아 가며 정산 카드를 1장씩 버리고,
+          먼저 정산 카드를 내지 못한 쪽이 피해 1을 받습니다.
+        """
+        if not target_id:
+            return {
+                "success": False,
+                "message": "승부를 걸 대상이 필요합니다.",
+                "event": None,
+            }
+        
+        attacker = self.game.get_player(player_id)
+        target = self.game.get_player(target_id)
+        if not attacker or not target:
+            return {
+                "success": False,
+                "message": "플레이어를 찾을 수 없습니다.",
+                "event": None,
+            }
+        if not target.is_alive or not attacker.is_alive:
+            return {
+                "success": False,
+                "message": "사망한 플레이어와는 승부를 진행할 수 없습니다.",
+                "event": None,
+            }
+        if attacker.id == target.id:
+            return {
+                "success": False,
+                "message": "자신에게 승부를 걸 수 없습니다.",
+                "event": None,
+            }
+        
+        removed_card = attacker.remove_card(card.id)
+        if not removed_card:
+            return {
+                "success": False,
+                "message": "카드를 제거할 수 없습니다.",
+                "event": None,
+            }
+        self.card_manager.discard_card(removed_card)
+        self._trigger_suzy_if_needed(attacker)
+        
+        # 결투 시작: 대상부터 정산 사용 시도
+        current = target
+        opponent = attacker
+        while True:
+            bang_card: Optional[Card] = None
+            for c in current.hand:
+                if c.is_bang():
+                    bang_card = c
+                    break
+            
+            if not bang_card:
+                # 현재 플레이어가 정산을 내지 못해 피해 1
+                died = current.take_damage(1)
+                self._handle_damage_result(current, died, cause="승부")
+                break
+            
+            removed = current.remove_card(bang_card.id)
+            if removed:
+                self.card_manager.discard_card(removed)
+                self._trigger_suzy_if_needed(current)
+                self.game.add_event(
+                    f"{current.name}이(가) 승부에서 정산 카드를 사용했습니다.",
+                    "action",
+                )
+            
+            # 턴 교대
+            current, opponent = opponent, current
+        
+        event_message = f"{attacker.name}이(가) {target.name}에게 승부를 걸었습니다."
+        self.game.add_event(event_message, "action")
+        
+        return {
+            "success": True,
+            "message": "승부 카드를 사용했습니다.",
+            "event": event_message,
+        }
+    
+    def handle_saloon_card(self, player_id: str, card: Card) -> Dict:
+        """
+        공개 연회 (SALOON) 카드 사용을 처리합니다.
+        - 모든 플레이어의 재력을 1씩 회복합니다 (최대 재력 초과 불가).
+        """
+        player = self.game.get_player(player_id)
+        if not player:
+            return {
+                "success": False,
+                "message": "플레이어를 찾을 수 없습니다.",
+                "event": None,
+            }
+        
+        removed_card = player.remove_card(card.id)
+        if not removed_card:
+            return {
+                "success": False,
+                "message": "카드를 제거할 수 없습니다.",
+                "event": None,
+            }
+        self.card_manager.discard_card(removed_card)
+        self._trigger_suzy_if_needed(player)
+        
+        healed_any = False
+        for p in self.game.get_alive_players():
+            if p.hp < p.max_hp:
+                old_hp = p.hp
+                p.heal(1)
+                healed_any = True
+                self.game.add_event(
+                    f"{p.name}이(가) 공개 연회로 재력을 {old_hp}에서 {p.hp}로 회복했습니다.",
+                    "action",
+                )
+        
+        event_message = f"{player.name}이(가) 공개 연회 카드를 사용했습니다."
+        self.game.add_event(event_message, "action")
+        
+        return {
+            "success": True,
+            "message": "공개 연회 카드를 사용했습니다.",
+            "event": event_message if healed_any else "공개 연회 효과로 회복된 플레이어가 없습니다.",
+        }
+    
+    def handle_general_store_card(self, player_id: str, card: Card) -> Dict:
+        """
+        자선 경매 (GENERAL_STORE) 카드 사용을 처리합니다.
+        - 원작 규칙: 생존 플레이어 수만큼 공개로 카드를 펼쳐 두고,
+          현재 플레이어부터 시계 방향으로 한 명씩 1장씩 선택하여 가져갑니다.
+        """
+        player = self.game.get_player(player_id)
+        if not player:
+            return {
+                "success": False,
+                "message": "플레이어를 찾을 수 없습니다.",
+                "event": None,
+            }
+        
+        removed_card = player.remove_card(card.id)
+        if not removed_card:
+            return {
+                "success": False,
+                "message": "카드를 제거할 수 없습니다.",
+                "event": None,
+            }
+        self.card_manager.discard_card(removed_card)
+        self._trigger_suzy_if_needed(player)
+        
+        alive_players = self.game.get_alive_players()
+        if not alive_players:
+            event_message = f"{player.name}이(가) 자선 경매 카드를 사용했지만 생존 플레이어가 없습니다."
+            self.game.add_event(event_message, "action")
+            return {
+                "success": True,
+                "message": "자선 경매 카드를 사용했지만 생존 플레이어가 없습니다.",
+                "event": event_message,
+            }
+        
+        # 생존 플레이어 수만큼 공개 카드 뽑기
+        count = len(alive_players)
+        pool: List[Card] = self.card_manager.draw_cards(count)
+        if not pool:
+            event_message = f"{player.name}이(가) 자선 경매 카드를 사용했지만 덱에 카드가 없습니다."
+            self.game.add_event(event_message, "action")
+            return {
+                "success": True,
+                "message": "덱에 카드가 없어 자선 경매 효과를 사용할 수 없습니다.",
+                "event": event_message,
+            }
+        
+        # 선택 순서: 현재 플레이어부터 시계 방향으로
+        order: List[str] = []
+        current = self.game.get_player(self.game.current_player_id) if self.game.current_player_id else player
+        visited = set()
+        while current and current.id not in visited and len(order) < len(alive_players):
+            if current.is_alive:
+                order.append(current.id)
+            visited.add(current.id)
+            nxt = self.game.get_next_player(current.id)
+            if not nxt:
+                break
+            current = nxt
+        
+        # 서버 내부 컨텍스트 저장
+        self.game.pending_action = {
+            "type": "GENERAL_STORE",
+            "remaining_cards": pool,
+            "pick_order": order,
+            "current_index": 0,
+        }
+        
+        # 첫 번째 선택자에게 후보 카드 정보 전달
+        def _serialize_card(c: Card) -> Dict:
+            suit_val = c.suit.value if (c.suit and hasattr(c.suit, "value")) else (c.suit if c.suit else None)
+            rank_val = c.rank.value if (c.rank and hasattr(c.rank, "value")) else (c.rank if c.rank else None)
+            return {
+                "id": c.id,
+                "name": c.name,
+                "suit": suit_val,
+                "rank": rank_val,
+                "description": c.description,
+            }
+        
+        self.game.required_response = {
+            "type": "GENERAL_STORE_PICK",
+            "currentPickerId": order[0],
+            "candidateCards": [_serialize_card(c) for c in pool],
+        }
+        
+        event_message = f"{player.name}이(가) 자선 경매 카드를 사용했습니다."
+        self.game.add_event(event_message, "action")
+        
+        return {
+            "success": True,
+            "message": "자선 경매 카드를 사용했습니다. 공개 카드 중에서 순서대로 선택합니다.",
+            "event": event_message,
+        }
+
+    def handle_general_store_pick(self, player_id: str, data: Dict) -> Dict:
+        """
+        자선 경매에서 공개 카드 풀 중 1장을 선택하는 응답을 처리합니다.
+        """
+        ctx = self.game.pending_action or {}
+        if ctx.get("type") != "GENERAL_STORE":
+            return {
+                "success": False,
+                "message": "진행 중인 자선 경매가 없습니다.",
+                "event": None,
+            }
+        
+        pick_order: List[str] = ctx.get("pick_order") or []
+        current_index: int = ctx.get("current_index", 0)
+        remaining_cards: List[Card] = ctx.get("remaining_cards") or []
+        
+        if current_index >= len(pick_order):
+            return {
+                "success": False,
+                "message": "더 이상 선택할 차례가 없습니다.",
+                "event": None,
+            }
+        
+        expected_player_id = pick_order[current_index]
+        if expected_player_id != player_id:
+            return {
+                "success": False,
+                "message": "현재 카드를 선택할 차례가 아닙니다.",
+                "event": None,
+            }
+        
+        card_id = data.get("card_id")
+        if not card_id:
+            return {
+                "success": False,
+                "message": "선택할 카드 ID가 필요합니다.",
+                "event": None,
+            }
+        
+        card_map = {c.id: c for c in remaining_cards}
+        if card_id not in card_map:
+            return {
+                "success": False,
+                "message": "선택한 카드 ID가 유효하지 않습니다.",
+                "event": None,
+            }
+        
+        player = self.game.get_player(player_id)
+        if not player:
+            return {
+                "success": False,
+                "message": "플레이어를 찾을 수 없습니다.",
+                "event": None,
+            }
+        
+        # 카드 획득
+        picked_card = card_map[card_id]
+        remaining_cards.remove(picked_card)
+        player.add_card(picked_card)
+        
+        self.game.add_event(
+            f"{player.name}이(가) 자선 경매에서 '{picked_card.name}' 카드를 선택했습니다.",
+            "action",
+        )
+        
+        # 다음 선택자 설정
+        current_index += 1
+        if current_index < len(pick_order) and remaining_cards:
+            self.game.pending_action = {
+                "type": "GENERAL_STORE",
+                "remaining_cards": remaining_cards,
+                "pick_order": pick_order,
+                "current_index": current_index,
+            }
+            
+            def _serialize_card(c: Card) -> Dict:
+                suit_val = c.suit.value if (c.suit and hasattr(c.suit, "value")) else (c.suit if c.suit else None)
+                rank_val = c.rank.value if (c.rank and hasattr(c.rank, "value")) else (c.rank if c.rank else None)
+                return {
+                    "id": c.id,
+                    "name": c.name,
+                    "suit": suit_val,
+                    "rank": rank_val,
+                    "description": c.description,
+                }
+            
+            next_player_id = pick_order[current_index]
+            self.game.required_response = {
+                "type": "GENERAL_STORE_PICK",
+                "currentPickerId": next_player_id,
+                "candidateCards": [_serialize_card(c) for c in remaining_cards],
+            }
+        else:
+            # 자선 경매 종료
+            self.game.pending_action = None
+            self.game.required_response = None
+        
+        return {
+            "success": True,
+            "message": "자선 경매 카드 선택을 완료했습니다.",
+            "event": self.game.last_event,
+        }
+    
     def handle_respond_attack(self, player_id: str, data: Dict) -> Dict:
         """
         공격 대응 액션을 처리합니다.
@@ -665,7 +1194,6 @@ class ActionHandler:
                 "message": "대응할 수 없는 상태입니다.",
                 "event": None,
             }
-        
         player = self.game.get_player(player_id)
         if not player:
             return {
@@ -673,6 +1201,23 @@ class ActionHandler:
                 "message": "플레이어를 찾을 수 없습니다.",
                 "event": None,
             }
+        
+        # 신의 한 수(Barrel) 장착 시: 판정 문양이 '치유'(HEARTS)이면 자동 회피
+        barrel = getattr(player, "equipment", {}).get("barrel") if hasattr(player, "equipment") else None
+        if barrel:
+            success = self._perform_judgement(player, [Suit.HEARTS])
+            if success:
+                self.game.add_event(
+                    f"{player.name}의 신의 한 수 효과로 공격을 회피했습니다.",
+                    "action",
+                )
+                if self.game.current_player_id:
+                    self.turn_manager.return_to_play_phase()
+                return {
+                    "success": True,
+                    "message": "신의 한 수 효과로 공격을 회피했습니다.",
+                    "event": self.game.last_event,
+                }
         
         # 비단 갑옷 (주르도네) + 만능 통보 (럭키 듀크) 판정:
         # 판정 문양이 '검'이면 자동 회피. 회피 성공 시 카드 1장 드로우.
@@ -703,6 +1248,7 @@ class ActionHandler:
         
         # 피해 받기
         died = player.take_damage(1)
+        self._handle_damage_result(player, died, cause="공격")
         
         # 이중 장부 (바트 캐시디): 재력 손실 시 턴당 최대 2회까지 1장 드로우
         if getattr(player, "treasure", None) == "이중 장부":
@@ -738,13 +1284,6 @@ class ActionHandler:
                     "action",
                 )
         
-        if died:
-            event_message = f"{player.name}이(가) 공격을 받아 재력이 0이 되어 사망했습니다."
-        else:
-            event_message = f"{player.name}이(가) 공격을 받아 재력이 {player.hp}로 감소했습니다."
-        
-        self.game.add_event(event_message, "action")
-        
         # 원래 플레이어의 턴으로 복귀
         if self.game.current_player_id:
             self.turn_manager.return_to_play_phase()
@@ -752,8 +1291,53 @@ class ActionHandler:
         return {
             "success": True,
             "message": "공격을 받았습니다.",
-            "event": event_message,
+            "event": self.game.last_event,
         }
+
+    def _handle_damage_result(self, target: Player, died: bool, cause: str) -> None:
+        """
+        피해 결과를 처리하고, 유산 상자(Vulture Sam) 보물 효과를 포함해 공통 후처리를 수행합니다.
+        """
+        if died:
+            event_message = f"{target.name}이(가) {cause}으로 재력이 0이 되어 사망했습니다."
+        else:
+            event_message = f"{target.name}이(가) {cause}으로 공격을 받아 재력이 {target.hp}로 감소했습니다."
+        
+        self.game.add_event(event_message, "action")
+        
+        if not died:
+            return
+        
+        # 유산 상자 (Vulture Sam): 탈락자의 카드/보물을 획득
+        vulture_owner: Optional[Player] = None
+        for p in self.game.players:
+            if getattr(p, "treasure", None) == "유산 상자" and p.is_alive and p.id != target.id:
+                vulture_owner = p
+                break
+        
+        if not vulture_owner:
+            return
+        
+        inherited_cards: List[Card] = []
+        # 손패 카드 상속
+        while target.hand:
+            card = target.hand.pop()
+            inherited_cards.append(card)
+        # 장착 카드 상속
+        equipment_items = list(getattr(target, "equipment", {}).items())
+        for slot, card in equipment_items:
+            if card:
+                inherited_cards.append(card)
+        target.equipment.clear()
+        
+        for card in inherited_cards:
+            vulture_owner.add_card(card)
+        
+        if inherited_cards:
+            self.game.add_event(
+                f"{vulture_owner.name}이(가) 유산 상자 효과로 탈락한 {target.name}의 카드 {len(inherited_cards)}장을 상속받았습니다.",
+                "action",
+            )
 
     def handle_use_treasure(self, player_id: str, data: Dict) -> Dict:
         """
@@ -1075,7 +1659,7 @@ class ActionHandler:
             if len(card_ids) != 2:
                 return False, "카드 2장이 필요합니다."
         
-        elif action_type in (ActionType.SELECT_STEAL_CARD, ActionType.SELECT_DRAW_ORDER):
+        elif action_type in (ActionType.SELECT_STEAL_CARD, ActionType.SELECT_DRAW_ORDER, ActionType.GENERAL_STORE_PICK):
             # 선택형 응답은 세부 검증을 각 핸들러에서 수행
             pass
         

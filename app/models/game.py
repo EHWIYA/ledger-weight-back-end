@@ -182,13 +182,18 @@ class Game(BaseModel):
         # 원형 구조이므로 양방향 거리 중 작은 값
         distance = min(pos_diff, total_players - pos_diff)
         
-        # 보물 효과 적용
+        # 보물/장착 효과 적용
         # 만국 지도: 공격자가 보는 모든 거리를 1 감소
         if getattr(from_player, "treasure", None) == "만국 지도":
             distance -= 1
         
         # 안개 병풍: 다른 플레이어가 나를 볼 때 거리를 1 증가
         if getattr(to_player, "treasure", None) == "안개 병풍":
+            distance += 1
+        
+        # 세력권 경계(Mustang): 다른 플레이어가 나를 볼 때 거리를 1 증가
+        equipment = getattr(to_player, "equipment", {}) or {}
+        if "mustang" in equipment:
             distance += 1
         
         return max(1, distance)  # 최소 거리는 1

@@ -88,6 +88,7 @@ class ActionType(str, Enum):
     USE_TREASURE = "USE_TREASURE"  # 보물 사용 (능동형)
     SELECT_STEAL_CARD = "SELECT_STEAL_CARD"  # 천청 방울: 강탈 카드 선택
     SELECT_DRAW_ORDER = "SELECT_DRAW_ORDER"  # 우선 전표: 드로우/위/아래 배치 선택
+    GENERAL_STORE_PICK = "GENERAL_STORE_PICK"  # 자선 경매: 공개 카드 중 1장 선택
 
 
 # ==================== 보물 (Treasure) ====================
