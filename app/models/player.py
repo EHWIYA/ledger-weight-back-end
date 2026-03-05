@@ -224,6 +224,8 @@ class Player(BaseModel):
             "name": self.name,
             "role": role_name,
             "hp": self.hp,
+            # 프론트엔드 스키마 호환을 위한 별도 필드 (항상 int)
+            "wealth": int(self.hp),
             "influence": self.get_effective_range(),
             "treasures": treasures,
             "hand": hand,

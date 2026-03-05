@@ -61,8 +61,27 @@ jobs:
           key: ${{ secrets.NAS_SERVER_SSH_KEY }}
           port: 22
           script: |
+            set -e
             cd /home/iwh/ledger-weight
+
             docker compose pull ledger-weight-api
             docker compose up -d ledger-weight-api
             docker compose ps
-            echo "Deployment completed at $(date)"
+
+            echo "Starting health check for ledger-weight-api..."
+
+            # 최대 10번, 2초 간격으로 /health 헬스 체크
+            for i in $(seq 1 10); do
+              if curl -fsS http://127.0.0.1:8088/health > /dev/null; then
+                echo "Health check passed"
+                echo "Deployment completed at $(date)"
+                exit 0
+              fi
+
+              echo "Health check failed, retrying... ($i/10)"
+              sleep 2
+            done
+
+            echo "Health check failed after retries, printing recent logs..."
+            docker compose logs --tail=200 ledger-weight-api || true
+            exit 1

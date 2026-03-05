@@ -183,14 +183,48 @@ message_handler = MessageHandler(game_manager, connection_manager)
 ```json
 {
   "type": "GAME_STATE_UPDATE",
-  "data": {
-    "id": "game_123",
-    "state": "진행 중",
-    "players": [...],
-    "current_player_id": "player_1",
-    "turn_state": "카드 사용",
-    "last_event": "플레이어 1이 정산 카드를 사용했습니다."
-  }
+  "gameId": "game_123",
+  "players": [
+    {
+      "id": "player_001",
+      "name": "홍길동",
+      "hp": 4,
+      "wealth": 4,
+      "influence": 1,
+      "role": "상단주",           // 자신의 역할만 표시, 다른 플레이어는 null
+      "hand": [                  // 자신의 핸드는 전체 카드, 다른 플레이어는 빈 배열
+        {
+          "id": "card_001",
+          "name": "정산",
+          "type": "BANG"
+        }
+      ],
+      "handCount": 2,
+      "tableCards": [],
+      "treasures": [],
+      "isAlive": true,
+      "position": 0,
+      "isBot": false
+    }
+  ],
+  "currentTurn": "player_001",
+  "turnState": {
+    "currentTurn": "player_001",
+    "timeLeft": 60,
+    "requiredResponse": {       // optional, 대응 단계일 때만
+      "type": "RESPOND_ATTACK",
+      "message": "홍길동이(가) 공격을 받았습니다. 회피하시겠습니까?"
+    }
+  },
+  "events": [
+    {
+      "id": "event_001",
+      "timestamp": 1702387200000,
+      "message": "게임이 시작되었습니다!",
+      "type": "notification"
+    }
+  ],
+  "phase": "lobby"              // "lobby" | "playing" | "finished"
 }
 ```
 
