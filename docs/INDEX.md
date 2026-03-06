@@ -1,57 +1,65 @@
 # 문서 인덱스
 
-빠른 문서 탐색을 위한 인덱스입니다.
+빠른 문서 탐색을 위한 인덱스입니다. 에이전트는 이 문서를 참고해 적절한 문서를 선택하세요.
 
-## 📚 시작하기
+---
 
-1. **[프로젝트 개요](PROJECT_OVERVIEW.md)** - 프로젝트 소개 및 핵심 개념
-2. **[개발 계획서](DEVELOPMENT_PLAN.md)** - 6주 개발 로드맵
+## 시각화
 
-## 🏗️ 아키텍처
+- **문서 대시보드**: 서버 실행 후 `http://localhost:8088/docs-view/` 접속
+- **시각화 가이드**: [docs/visual-guide/index.html](visual-guide/index.html) — 프로젝트 구조, HTTP/WebSocket 흐름, Python·FastAPI·라이브러리 개념 (Mermaid)
 
-- **[시스템 아키텍처](architecture/system-design.md)** - 전체 시스템 설계, 의사결정 기록, 성능 고려사항
+---
 
-## 💻 FastAPI 구현
+## 개념 (학습용, 초보자급)
 
-### 기본
-- **[베스트 프랙티스](fastapi/best-practices.md)** - 적용된 FastAPI 베스트 프랙티스
+| 문서 | 경로 | 용도 |
+|------|------|------|
+| Python | [concepts/python.md](concepts/python.md) | async, 타입 힌트, Enum, 클래스, 패키지 |
+| FastAPI | [concepts/fastapi.md](concepts/fastapi.md) | 앱, 라우트, 미들웨어, WebSocket, Query/Path |
+| GitHub/Git | [concepts/github-git.md](concepts/github-git.md) | 커밋, 브랜치, GitHub Actions |
+| Docker | [concepts/docker.md](concepts/docker.md) | Dockerfile, docker-compose, 배포 |
+| Pydantic | [concepts/pydantic.md](concepts/pydantic.md) | 모델, BaseSettings, 검증 |
+| WebSocket | [concepts/websocket.md](concepts/websocket.md) | 프로토콜, 메시지 타입 |
 
-### 기능별 문서
-- **[프로젝트 구조](fastapi/features/project-structure.md)** - 폴더 구조 설계 및 의사결정
-- **[모델 클래스](fastapi/features/models.md)** - Role, Card, Player, Game 모델 구현
-- **[카드 관리자](fastapi/features/card-manager.md)** - 카드 덱 생성, 셔플, 드로우 로직
-- **[게임 매니저](fastapi/features/game-manager.md)** - 게임 생성, 초기화, 승리 조건 체크
-- **[턴 관리자](fastapi/features/turn-manager.md)** - 턴 순서, 턴 단계, 카드 드로우 관리
-- **[액션 핸들러](fastapi/features/action-handler.md)** - 카드 사용, 공격/방어 처리
+---
 
-## 📝 문서 작성 가이드
+## 프로젝트
 
-각 문서는 다음 항목을 포함합니다:
-- ✅ 코드 예시
-- ✅ 의사결정 기록
-- ✅ 트러블슈팅
-- ✅ 성능 고려사항
+| 문서 | 경로 | 용도 |
+|------|------|------|
+| 개요 | [project/overview.md](project/overview.md) | 프로젝트 소개, 용어, WebSocket 프로토콜 |
+| 시스템 아키텍처 | [project/architecture/system-design.md](project/architecture/system-design.md) | 레이어드 아키텍처, 의사결정 |
+| 개발 계획 | [project/planning/development-plan.md](project/planning/development-plan.md) | 6주 개발 로드맵 |
+| 향후 작업 | [project/planning/future-work-plan.md](project/planning/future-work-plan.md) | Phase별 작업, 우선순위 |
+| 구현 상세 | [project/implementation/](project/implementation/) | project-structure, models, card-manager, game-manager, turn-manager, action-handler, websocket, best-practices |
 
-## 📦 배포 및 운영
+---
 
-- **[프론트엔드 연동 계획](FRONTEND_COORDINATION_PLAN.md)** - 프론트엔드 연동 작업 계획
-- **[NAS 서버 구축 가이드](NAS_SERVER_SETUP_GUIDE.md)** - 서버 환경 구축 가이드
-- **[데이터베이스 추천](DATABASE_RECOMMENDATION.md)** - DB 선택 가이드
-- **[배포 전 확인 사항](DEPLOYMENT_CHECKLIST_RESPONSE.md)** - 배포 준비 체크리스트
+## 운영
 
-## 📋 작업일지
+| 문서 | 경로 | 용도 |
+|------|------|------|
+| NAS 서버 구축 | [operations/nas-server-setup.md](operations/nas-server-setup.md) | 서버 환경, Nginx, SSL, CI/CD |
+| 배포 체크리스트 | [operations/deployment-checklist.md](operations/deployment-checklist.md) | 배포 전 확인 사항 |
+| 프론트엔드 연동 | [operations/frontend-coordination.md](operations/frontend-coordination.md) | WebSocket 프로토콜, 연동 가이드 |
+| WebSocket 트러블슈팅 | [operations/websocket-troubleshooting.md](operations/websocket-troubleshooting.md) | 연결 문제 해결 |
+| 데이터베이스 추천 | [operations/database-recommendation.md](operations/database-recommendation.md) | Redis, PostgreSQL |
 
-프로젝트 루트의 `logs/` 폴더에 날짜별 작업일지가 저장됩니다.
-- 구조: `logs/YYYY/MM/DD.md`
-- 예시: `logs/2025/12/11.md` - 2025년 12월 11일 작업일지
-- 각 작업일지에는 작업 시간, 완료한 작업, 이슈 및 해결, 다음 작업 계획 등이 포함됩니다.
+---
 
-## 🔄 문서 업데이트 이력
+## 변경 이력
 
-- 2025-12-11: 프로젝트 기본 구조 및 모델 클래스 문서화 완료
-- 2025-12-11: 카드 관리자 및 게임 매니저 문서화 완료
-- 2025-12-11: 턴 관리자 문서화 완료
-- 2025-12-11: 액션 핸들러 문서화 완료
-- 2025-12-11: WebSocket 구현 문서화 완료
-- 2025-12-11: 프론트엔드 연동 및 배포 가이드 작성 완료
+| 문서 | 경로 |
+|------|------|
+| 2025-12-11 | [changelog/2025-12-11.md](changelog/2025-12-11.md) |
+| 2025-12-12 | [changelog/2025-12-12.md](changelog/2025-12-12.md) |
 
+---
+
+## 에이전트 참조 가이드
+
+- **FastAPI 라우트 추가 시**: concepts/fastapi.md, project/implementation/
+- **게임 로직 수정 시**: project/implementation/ (game-manager, turn-manager, action-handler)
+- **WebSocket 프로토콜 수정 시**: concepts/websocket.md, project/implementation/websocket.md
+- **배포/운영 시**: operations/

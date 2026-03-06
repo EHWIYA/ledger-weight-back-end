@@ -20,6 +20,10 @@ docs/
 *.md
 .cursor/
 
+# Astro docs-app (dist는 빌드 단계에서 생성)
+docs-app/node_modules/
+docs-app/dist/
+
 # 테스트 (프로덕션 이미지에서 제외 가능)
 tests/
 pytest.ini

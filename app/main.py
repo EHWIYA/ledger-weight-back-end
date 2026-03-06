@@ -4,11 +4,13 @@ FastAPI 애플리케이션 진입점
 
 import json
 import uuid
+from pathlib import Path
 from datetime import datetime, timezone
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.game.game_manager import GameManager
 from app.websocket.connection_manager import ConnectionManager
@@ -37,6 +39,22 @@ app.add_middleware(
 game_manager = GameManager()
 connection_manager = ConnectionManager()
 message_handler = MessageHandler(game_manager, connection_manager)
+
+# 프로젝트 문서 대시보드 (Astro 빌드 결과물 서빙)
+docs_path = Path(__file__).parent.parent / "docs-app" / "dist"
+
+
+@app.get("/docs-view/_astro/{file_path:path}")
+async def serve_docs_astro_assets(file_path: str):
+    """Astro 빌드 CSS/JS 등 _astro 하위 정적 파일 서빙 (StaticFiles 404 방지)"""
+    full_path = docs_path / "_astro" / file_path
+    if full_path.is_file():
+        media_type = "text/css" if file_path.endswith(".css") else "application/javascript" if file_path.endswith(".js") else None
+        return FileResponse(full_path, media_type=media_type)
+    raise HTTPException(status_code=404, detail="Not found")
+
+
+app.mount("/docs-view", StaticFiles(directory=str(docs_path), html=True), name="docs-view")
 
 
 @app.exception_handler(HTTPException)

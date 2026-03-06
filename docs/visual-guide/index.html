@@ -1,155 +1,10 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>장부의 무게 백엔드 — 프로젝트 & 개념 시각화</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <script type="module">
-    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.mjs';
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: 'base',
-      themeVariables: {
-        primaryColor: '#e8f4f8',
-        primaryTextColor: '#1a1a2e',
-        primaryBorderColor: '#4a90a4',
-        lineColor: '#5c6b7a',
-        secondaryColor: '#f0f4f0',
-        tertiaryColor: '#fff'
-      },
-      flowchart: { useMaxWidth: true, htmlLabels: true },
-      sequence: { useMaxWidth: true }
-    });
-  </script>
-  <style>
-    :root {
-      --bg: #fafbfc;
-      --card: #ffffff;
-      --text: #1a1a2e;
-      --text-muted: #5c6b7a;
-      --accent: #2d6a7a;
-      --accent-soft: #e8f4f8;
-      --border: #e6e9ef;
-      --code: #2d3748;
-      --font-sans: 'Noto Sans KR', system-ui, sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
-      --radius: 12px;
-      --shadow: 0 2px 12px rgba(0,0,0,.06);
-      --max-w: 960px;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: var(--font-sans);
-      font-size: 16px;
-      line-height: 1.65;
-      color: var(--text);
-      background: var(--bg);
-    }
-    .wrap { max-width: var(--max-w); margin: 0 auto; padding: 0 24px 80px; }
-    header {
-      background: linear-gradient(160deg, #1a2a35 0%, #2d4a52 100%);
-      color: #fff;
-      padding: 48px 24px 56px;
-      text-align: center;
-    }
-    header h1 { margin: 0 0 8px; font-size: 1.75rem; font-weight: 700; }
-    header p { margin: 0; opacity: .88; font-size: 0.95rem; }
-    nav {
-      position: sticky;
-      top: 0;
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 24px;
-      z-index: 10;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px 16px;
-      justify-content: center;
-    }
-    nav a {
-      color: var(--accent);
-      text-decoration: none;
-      font-size: 0.875rem;
-      font-weight: 500;
-    }
-    nav a:hover { text-decoration: underline; }
-    section {
-      margin-top: 48px;
-      padding-top: 32px;
-    }
-    section:first-of-type { margin-top: 40px; }
-    h2 {
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: var(--text);
-      margin: 0 0 16px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--accent);
-    }
-    h3 { font-size: 1.1rem; font-weight: 600; margin: 20px 0 10px; color: var(--text); }
-    p { margin: 0 0 12px; color: var(--text); }
-    .muted { color: var(--text-muted); font-size: 0.9rem; }
-    .diagram-wrap {
-      background: var(--card);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 24px;
-      margin: 20px 0;
-      overflow: auto;
-    }
-    .diagram-wrap .mermaid { display: flex; justify-content: center; }
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 16px;
-      margin: 20px 0;
-    }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      box-shadow: var(--shadow);
-    }
-    .card h4 { margin: 0 0 8px; font-size: 1rem; color: var(--accent); }
-    .card .meta { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; }
-    .card p { margin: 0 0 8px; font-size: 0.9rem; }
-    .card code { font-size: 0.8rem; background: var(--accent-soft); padding: 2px 6px; border-radius: 4px; }
-    ul { margin: 0 0 12px; padding-left: 1.2em; }
-    li { margin: 4px 0; }
-    code { font-family: var(--font-mono); color: var(--code); }
-    pre { background: #1a1a2e; color: #e6e9ef; padding: 16px; border-radius: var(--radius); overflow: auto; font-size: 0.85rem; }
-    .concept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin: 20px 0; }
-    .concept-box { background: var(--accent-soft); border-radius: var(--radius); padding: 16px; border-left: 4px solid var(--accent); }
-    .concept-box strong { display: block; margin-bottom: 6px; color: var(--accent); }
-    footer { text-align: center; padding: 24px; color: var(--text-muted); font-size: 0.85rem; }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>장부의 무게 — 백엔드 시각화 가이드</h1>
-    <p>프로젝트 구성 · 요청 흐름 · Python/FastAPI/라이브러리 개념을 한눈에</p>
-  </header>
-  <nav>
-    <a href="#overview">개요</a>
-    <a href="#structure">프로젝트 구조</a>
-    <a href="#flow-http">HTTP 흐름</a>
-    <a href="#flow-ws">WebSocket 흐름</a>
-    <a href="#python">Python 개념</a>
-    <a href="#fastapi">FastAPI 개념</a>
-    <a href="#libraries">라이브러리 활용</a>
-  </nav>
-  <div class="wrap">
-    <section id="overview">
-      <h2>1. 프로젝트 개요</h2>
-      <p>장부의 무게는 <strong>BANG!</strong> 카드 게임을 웹으로 구현한 실시간 멀티플레이 백엔드입니다. <strong>FastAPI</strong>로 HTTP API와 <strong>WebSocket</strong>을 제공하며, 클라이언트는 로비 접속 → 게임 참가 → 카드 액션을 메시지로 주고받습니다.</p>
-      <div class="diagram-wrap">
-        <pre class="mermaid">
-flowchart LR
+<!DOCTYPE html><html lang="ko"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="프로젝트 구성 · 요청 흐름 · Python/FastAPI/라이브러리 개념"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><title>장부의 무게 — 시각화 가이드</title><script type="module" src="/docs-view/mermaid-init.js"></script><script>
+    (function(){function apply(){var g=document.getElementById('gnb');if(!g)return;var desk=g.querySelector('.gnb-desktop-wrap');var mob=g.querySelector('.gnb-mobile-wrap');if(desk&&mob){var w=window.innerWidth;var mobile=w<1024;desk.style.cssText=mobile?'display:none!important':'display:flex!important';mob.style.cssText=mobile?'display:flex!important':'display:none!important';}}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',apply);}else{apply();}window.matchMedia('(max-width:1023px)').addListener(apply);window.addEventListener('resize',apply);})();
+  </script><link rel="stylesheet" href="/docs-view/_astro/index.BWiT6XV2.css">
+<style>@media(max-width:1023px){#gnb .gnb-desktop-wrap{display:none!important}#gnb .gnb-mobile-wrap{display:flex!important}}@media(min-width:1024px){#gnb .gnb-desktop-wrap{display:flex!important}#gnb .gnb-mobile-wrap{display:none!important}}
+</style></head> <body class="min-h-screen bg-[#fafbfc] text-[#1a1a2e] font-sans antialiased overflow-x-hidden">    <header class="bg-gradient-to-br from-[#1a2a35] to-[#2d4a52] text-white py-8 px-4 text-center sm:py-10 sm:px-6 md:py-12 md:px-6"> <div class="flex justify-start mb-3 sm:mb-4"> <a href="../" class="text-white/90 text-sm hover:text-white no-underline touch-manipulation py-1">← 대시보드</a> </div> <h1 class="text-lg font-bold m-0 mb-2 sm:text-xl md:text-2xl">장부의 무게 — 백엔드 시각화 가이드</h1> <p class="m-0 opacity-90 text-xs sm:text-sm">프로젝트 구성 · 요청 흐름 · Python/FastAPI/라이브러리 개념을 한눈에</p> </header> <nav class="sticky top-0 z-10 bg-white border-b border-[#e6e9ef]" id="gnb">  <!-- 모바일: 햄버거 버튼 --> <div class="gnb-mobile-wrap flex items-center justify-between py-2.5 px-3" style="display:none"> <button type="button" id="hamburger-btn" class="p-2 -m-2 rounded-lg text-[#2d6a7a] hover:bg-[#e8f4f8] touch-manipulation aria-label=" 메뉴 열기" aria-expanded="false" aria-controls="gnb-dropdown"> <svg id="hamburger-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="close-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- PC: GNB 링크 --> <div class="gnb-desktop-wrap flex flex-wrap justify-center gap-4 py-3 px-6" style="display:none" role="menu"> <a href="#overview" class="gnb-link text-[#2d6a7a] text-sm font-medium no-underline hover:underline py-2 touch-manipulation" role="menuitem">개요</a> <a href="#structure" class="gnb-link text-[#2d6a7a] text-sm font-medium no-underline hover:underline py-2 touch-manipulation" role="menuitem">프로젝트 구조</a> <a href="#flow-http" class="gnb-link text-[#2d6a7a] text-sm font-medium no-underline hover:underline py-2 touch-manipulation" role="menuitem">HTTP 흐름</a> <a href="#flow-ws" class="gnb-link text-[#2d6a7a] text-sm font-medium no-underline hover:underline py-2 touch-manipulation" role="menuitem">WebSocket 흐름</a> <a href="#python" class="gnb-link text-[#2d6a7a] text-sm font-medium no-underline hover:underline py-2 touch-manipulation" role="menuitem">Python 개념</a> <a href="#fastapi" class="gnb-link text-[#2d6a7a] text-sm font-medium no-underline hover:underline py-2 touch-manipulation" role="menuitem">FastAPI 개념</a> <a href="#libraries" class="gnb-link text-[#2d6a7a] text-sm font-medium no-underline hover:underline py-2 touch-manipulation" role="menuitem">라이브러리 활용</a> </div> <div id="gnb-dropdown" class="gnb-dropdown hidden border-t border-[#e6e9ef] bg-white py-3 px-4 flex flex-col gap-1"> <a href="#overview" class="gnb-link text-[#2d6a7a] text-sm font-medium py-3 px-2 rounded-lg hover:bg-[#e8f4f8] touch-manipulation">개요</a> <a href="#structure" class="gnb-link text-[#2d6a7a] text-sm font-medium py-3 px-2 rounded-lg hover:bg-[#e8f4f8] touch-manipulation">프로젝트 구조</a> <a href="#flow-http" class="gnb-link text-[#2d6a7a] text-sm font-medium py-3 px-2 rounded-lg hover:bg-[#e8f4f8] touch-manipulation">HTTP 흐름</a> <a href="#flow-ws" class="gnb-link text-[#2d6a7a] text-sm font-medium py-3 px-2 rounded-lg hover:bg-[#e8f4f8] touch-manipulation">WebSocket 흐름</a> <a href="#python" class="gnb-link text-[#2d6a7a] text-sm font-medium py-3 px-2 rounded-lg hover:bg-[#e8f4f8] touch-manipulation">Python 개념</a> <a href="#fastapi" class="gnb-link text-[#2d6a7a] text-sm font-medium py-3 px-2 rounded-lg hover:bg-[#e8f4f8] touch-manipulation">FastAPI 개념</a> <a href="#libraries" class="gnb-link text-[#2d6a7a] text-sm font-medium py-3 px-2 rounded-lg hover:bg-[#e8f4f8] touch-manipulation">라이브러리 활용</a> </div> </nav> <script type="module">(function(){const e=document.getElementById("hamburger-btn"),t=document.getElementById("gnb-dropdown"),n=document.getElementById("hamburger-icon"),d=document.getElementById("close-icon"),s=document.querySelectorAll(".gnb-link");function c(){t?.classList.remove("hidden"),n?.classList.add("hidden"),d?.classList.remove("hidden"),e?.setAttribute("aria-expanded","true"),e?.setAttribute("aria-label","메뉴 닫기")}function i(){t?.classList.add("hidden"),n?.classList.remove("hidden"),d?.classList.add("hidden"),e?.setAttribute("aria-expanded","false"),e?.setAttribute("aria-label","메뉴 열기")}function a(){t?.classList.contains("hidden")?c():i()}e?.addEventListener("click",a),s.forEach(o=>o.addEventListener("click",()=>{window.matchMedia("(max-width: 1023px)").matches&&i()}))})();</script> <main class="max-w-4xl mx-auto px-4 py-6 pb-16 sm:px-6 sm:pb-20 md:px-6"> <section id="overview" class="mt-6 pt-6 sm:mt-8 sm:pt-8 md:mt-12 md:pt-8"> <h2 class="text-base font-bold mb-3 pb-2 border-b-2 border-[#2d6a7a] sm:text-lg md:text-xl md:mb-4">1. 프로젝트 개요</h2> <p class="mb-4">
+장부의 무게는 <strong>BANG!</strong> 카드 게임을 웹으로 구현한 실시간 멀티플레이 백엔드입니다. <strong>FastAPI</strong>로 HTTP API와 <strong>WebSocket</strong>을 제공하며, 클라이언트는 로비 접속 → 게임 참가 → 카드 액션을 메시지로 주고받습니다.
+</p> <div class="bg-white rounded-xl shadow-sm p-4 my-4 overflow-x-auto sm:p-5 sm:my-5 md:p-6 md:my-5"> <pre class="mermaid">flowchart LR
   subgraph 클라이언트
     A[브라우저/앱]
   end
@@ -162,16 +17,9 @@ flowchart LR
   A -->|WebSocket /lobby/game_id | B
   B --> C
   B --> D
-        </pre>
-      </div>
-    </section>
-
-    <section id="structure">
-      <h2>2. 프로젝트 구조</h2>
-      <p>아래는 <code>app</code> 패키지 기준 디렉터리와 역할입니다. <code>main.py</code>가 진입점이고, 게임 로직(<code>game</code>), 연결/메시지(<code>websocket</code>), 데이터 모델(<code>models</code>)로 분리되어 있습니다.</p>
-      <div class="diagram-wrap">
-        <pre class="mermaid">
-flowchart TB
+      </pre> </div> </section> <section id="structure" class="mt-6 pt-6 sm:mt-8 sm:pt-8 md:mt-12 md:pt-8"> <h2 class="text-base font-bold mb-3 pb-2 border-b-2 border-[#2d6a7a] sm:text-lg md:text-xl md:mb-4">2. 프로젝트 구조</h2> <p class="mb-4">
+아래는 <code class="bg-[#e8f4f8] px-1.5 py-0.5 rounded">app</code> 패키지 기준 디렉터리와 역할입니다. <code class="bg-[#e8f4f8] px-1.5 py-0.5 rounded">main.py</code>가 진입점이고, 게임 로직(<code class="bg-[#e8f4f8] px-1.5 py-0.5 rounded">game</code>), 연결/메시지(<code class="bg-[#e8f4f8] px-1.5 py-0.5 rounded">websocket</code>), 데이터 모델(<code class="bg-[#e8f4f8] px-1.5 py-0.5 rounded">models</code>)로 분리되어 있습니다.
+</p> <div class="bg-white rounded-xl shadow-sm p-4 my-4 overflow-x-auto sm:p-5 sm:my-5 md:p-6 md:my-5"> <pre class="mermaid">flowchart TB
   subgraph app["app 패키지"]
     main["main.py\n진입점 · 라우트 등록"]
     config["config.py\nSettings · 환경변수"]
@@ -192,7 +40,7 @@ flowchart TB
       m_role["role.py"]
     end
     subgraph utils["utils/"]
-      const["constants.py\nRole, GameState, CardType 등"]
+      constants["constants.py\nRole, GameState, CardType 등"]
     end
   end
   main --> config
@@ -206,28 +54,12 @@ flowchart TB
   gm --> m_game
   ah --> tm
   ah --> cm
-  conn --> const
-  msg --> const
-  gm --> const
-        </pre>
-      </div>
-      <h3>파일 역할 요약</h3>
-      <ul>
-        <li><strong>main.py</strong> — FastAPI 앱 생성, CORS, <code>GET /</code>, <code>GET /health</code>, <code>WebSocket /lobby/{game_id}</code>, <code>/ws/{player_id}</code> 정의. 전역으로 <code>GameManager</code>, <code>ConnectionManager</code>, <code>MessageHandler</code> 사용.</li>
-        <li><strong>config.py</strong> — <code>pydantic_settings</code>로 <code>.env</code>에서 HOST, PORT, CORS, 게임/WebSocket 상수 로드.</li>
-        <li><strong>game/</strong> — 게임 생성·플레이어 추가·턴·카드 뽑기/사용·승리 판정.</li>
-        <li><strong>websocket/</strong> — 연결 수락/해제, 플레이어별/방별 메시지 전송, 수신 메시지를 <code>MessageHandler</code>로 라우팅.</li>
-        <li><strong>models/</strong> — Pydantic 모델: Game, Player, Card, Role.</li>
-        <li><strong>utils/constants.py</strong> — Role, GameState, TurnState, CardType, Suit, Rank 등 Enum.</li>
-      </ul>
-    </section>
-
-    <section id="flow-http">
-      <h2>3. HTTP 요청 흐름</h2>
-      <p>클라이언트가 <code>GET /</code> 또는 <code>GET /health</code>를 호출할 때의 흐름입니다. Uvicorn이 ASGI로 요청을 받아 FastAPI가 라우트에 맞는 핸들러를 실행하고 JSON을 반환합니다.</p>
-      <div class="diagram-wrap">
-        <pre class="mermaid">
-sequenceDiagram
+  conn --> constants
+  msg --> constants
+  gm --> constants
+      </pre> </div> </section> <section id="flow-http" class="mt-6 pt-6 sm:mt-8 sm:pt-8 md:mt-12 md:pt-8"> <h2 class="text-base font-bold mb-3 pb-2 border-b-2 border-[#2d6a7a] sm:text-lg md:text-xl md:mb-4">3. HTTP 요청 흐름</h2> <p class="mb-4">
+클라이언트가 <code class="bg-[#e8f4f8] px-1.5 py-0.5 rounded">GET /</code> 또는 <code class="bg-[#e8f4f8] px-1.5 py-0.5 rounded">GET /health</code>를 호출할 때의 흐름입니다.
+</p> <div class="bg-white rounded-xl shadow-sm p-4 my-4 overflow-x-auto sm:p-5 sm:my-5 md:p-6 md:my-5"> <pre class="mermaid">sequenceDiagram
   participant C as 클라이언트
   participant U as Uvicorn
   participant F as FastAPI
@@ -237,20 +69,13 @@ sequenceDiagram
   U->>F: ASGI 요청
   F->>F: CORS 미들웨어
   F->>R: health_check()
-  R->>R: return {"status": "healthy"}
+  R->>R: return status healthy
   R->>F: JSON 응답
   F->>U: ASGI 응답
   U->>C: 200 OK + JSON
-        </pre>
-      </div>
-    </section>
-
-    <section id="flow-ws">
-      <h2>4. WebSocket 메시지 흐름</h2>
-      <p>로비 엔드포인트 <code>/lobby/{game_id}?player=이름</code> 접속 시 연결 수락 → 자동 참가 → 이후 클라이언트 메시지(JOIN_GAME, PLAYER_ACTION, GET_GAME_STATE 등)를 <code>MessageHandler</code>가 처리하고, 필요 시 해당 게임 플레이어들에게 브로드캐스트합니다.</p>
-      <div class="diagram-wrap">
-        <pre class="mermaid">
-sequenceDiagram
+      </pre> </div> </section> <section id="flow-ws" class="mt-6 pt-6 sm:mt-8 sm:pt-8 md:mt-12 md:pt-8"> <h2 class="text-base font-bold mb-3 pb-2 border-b-2 border-[#2d6a7a] sm:text-lg md:text-xl md:mb-4">4. WebSocket 메시지 흐름</h2> <p class="mb-4">
+로비 엔드포인트 <code class="bg-[#e8f4f8] px-1.5 py-0.5 rounded">/lobby/{game_id}?player=이름</code> 접속 시 연결 수락 → 자동 참가 → 이후 클라이언트 메시지를 <code class="bg-[#e8f4f8] px-1.5 py-0.5 rounded">MessageHandler</code>가 처리합니다.
+</p> <div class="bg-white rounded-xl shadow-sm p-4 my-4 overflow-x-auto sm:p-5 sm:my-5 md:p-6 md:my-5"> <pre class="mermaid">sequenceDiagram
   participant C as 클라이언트
   participant M as main.py
   participant Conn as ConnectionManager
@@ -270,10 +95,7 @@ sequenceDiagram
   loop 메시지 루프
     C->>M: JSON 메시지
     M->>Msg: handle_message(player_id, message)
-    alt PLAYER_ACTION
-      Msg->>GM: (action_handler 등)
-      GM-->>Msg: 결과
-    end
+    Msg->>GM: (action_handler 등)
     Msg-->>M: result
     M->>Conn: send_personal_message / broadcast
     Conn->>C: JSON 응답
@@ -281,115 +103,7 @@ sequenceDiagram
 
   C->>M: 연결 종료
   M->>Conn: disconnect(player_id)
-        </pre>
-      </div>
-      <h3>메시지 타입</h3>
-      <p><code>message_handler.handle_message</code>에서 <code>type</code>에 따라 분기합니다.</p>
-      <ul>
-        <li><strong>JOIN_GAME</strong> — 게임 참가 (로비 접속 시 자동 호출)</li>
-        <li><strong>START_GAME</strong> — 게임 시작</li>
-        <li><strong>GET_GAME_STATE</strong> — 현재 게임 상태 조회</li>
-        <li><strong>PLAYER_ACTION</strong> — 카드 사용 등 액션 (action_handler 연동)</li>
-        <li><strong>ADD_AI_PLAYER</strong> — AI 플레이어 추가</li>
-      </ul>
-    </section>
-
-    <section id="python">
-      <h2>5. Python 개념과 프로젝트 내 활용</h2>
-      <p>이 프로젝트에서 쓰이는 Python 개념을 짧게 정리하고, 어디서 사용되는지 매핑했습니다.</p>
-      <div class="concept-grid">
-        <div class="concept-box">
-          <strong>async / await</strong>
-          비동기 함수. I/O 대기 시 다른 코루틴이 실행되어 동시 접속을 효율적으로 처리합니다.
-          <br /><span class="muted">사용처: main.py 라우트, connection_manager, message_handler</span>
-        </div>
-        <div class="concept-box">
-          <strong>타입 힌트 (Type Hints)</strong>
-          변수·인자·반환 타입을 <code>str</code>, <code>Dict</code>, <code>Optional[T]</code> 등으로 표기. 가독성과 도구 지원에 유리합니다.
-          <br /><span class="muted">사용처: 전 모듈 (game, models, websocket)</span>
-        </div>
-        <div class="concept-box">
-          <strong>Enum</strong>
-          고정된 상수 집합(역할, 게임 상태, 카드 타입 등)을 타입으로 정의합니다.
-          <br /><span class="muted">사용처: utils/constants.py (Role, GameState, TurnState, CardType)</span>
-        </div>
-        <div class="concept-box">
-          <strong>클래스와 인스턴스</strong>
-          GameManager, ConnectionManager, MessageHandler 등이 상태를 갖는 객체로, main에서 한 번 생성해 전역 사용합니다.
-          <br /><span class="muted">사용처: app 전역 인스턴스</span>
-        </div>
-        <div class="concept-box">
-          <strong>딕셔너리 / set</strong>
-          <code>games: Dict[str, Game]</code>, <code>active_connections: Dict[str, WebSocket]</code>, <code>game_players: Dict[str, Set[str]]</code> 등으로 관계를 저장합니다.
-          <br /><span class="muted">사용처: GameManager, ConnectionManager</span>
-        </div>
-        <div class="concept-box">
-          <strong>모듈 / 패키지</strong>
-          <code>app.game</code>, <code>app.models</code>, <code>app.websocket</code> 등으로 역할별로 나누어 import 합니다.
-          <br /><span class="muted">사용처: from app.xxx import yyy</span>
-        </div>
-      </div>
-      <div class="diagram-wrap">
-        <pre class="mermaid">
-flowchart LR
-  subgraph Python 개념
-    A[async/await]
-    B[타입 힌트]
-    C[Enum]
-    D[클래스·인스턴스]
-  end
-  subgraph 프로젝트
-    E[main · websocket]
-    F[models · game]
-    G[constants]
-    H[GameManager 등]
-  end
-  A --> E
-  B --> F
-  C --> G
-  D --> H
-        </pre>
-      </div>
-    </section>
-
-    <section id="fastapi">
-      <h2>6. FastAPI 개념과 프로젝트 내 활용</h2>
-      <p>FastAPI의 핵심 개념과 이 레포에서의 사용 위치를 대응했습니다.</p>
-      <div class="concept-grid">
-        <div class="concept-box">
-          <strong>FastAPI() 앱 인스턴스</strong>
-          모든 라우트·미들웨어·의존성의 진입점. <code>app.main:app</code>으로 uvicorn이 로드합니다.
-          <br /><span class="muted">사용처: main.py</span>
-        </div>
-        <div class="concept-box">
-          <strong>라우트 데코레이터</strong>
-          <code>@app.get("/")</code>, <code>@app.get("/health")</code>, <code>@app.websocket("/lobby/...")</code> 로 경로와 HTTP 메서드·WebSocket을 연결합니다.
-          <br /><span class="muted">사용처: main.py</span>
-        </div>
-        <div class="concept-box">
-          <strong>미들웨어</strong>
-          <code>CORSMiddleware</code>로 브라우저 cross-origin 요청을 허용합니다.
-          <br /><span class="muted">사용처: main.py add_middleware</span>
-        </div>
-        <div class="concept-box">
-          <strong>WebSocket</strong>
-          <code>WebSocket</code> 타입으로 연결을 받고, <code>accept()</code>, <code>receive_text()</code>, <code>send_*</code>로 양방향 통신합니다.
-          <br /><span class="muted">사용처: main.py, connection_manager</span>
-        </div>
-        <div class="concept-box">
-          <strong>Query / Path</strong>
-          쿼리 파라미터(<code>player=...</code>), 경로 파라미터(<code>game_id</code>, <code>player_id</code>)를 함수 인자로 받습니다.
-          <br /><span class="muted">사용처: lobby_websocket_endpoint(game_id, player=Query(...))</span>
-        </div>
-        <div class="concept-box">
-          <strong>자동 문서화</strong>
-          <code>docs_url="/docs"</code>, <code>redoc_url="/redoc"</code> 로 Swagger UI / ReDoc 자동 생성.
-          <br /><span class="muted">사용처: main.py FastAPI(...)</span>
-        </div>
-      </div>
-      <div class="diagram-wrap">
-        <pre class="mermaid">
-flowchart TB
+      </pre> </div> <p class="text-sm text-[#5c6b7a] mt-2">메시지 타입: JOIN_GAME, START_GAME, GET_GAME_STATE, PLAYER_ACTION, ADD_AI_PLAYER</p> </section> <section id="python" class="mt-6 pt-6 sm:mt-8 sm:pt-8 md:mt-12 md:pt-8"> <h2 class="text-base font-bold mb-3 pb-2 border-b-2 border-[#2d6a7a] sm:text-lg md:text-xl md:mb-4">5. Python 개념</h2> <p class="mb-4">이 프로젝트에서 쓰이는 Python 개념과 사용처입니다.</p> <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"> <div class="bg-[#e8f4f8] rounded-xl p-4 border-l-4 border-[#2d6a7a]"> <strong class="block mb-1.5 text-[#2d6a7a]">async / await</strong> <span class="text-sm">비동기 함수. I/O 대기 시 다른 코루틴이 실행됩니다.</span> <span class="block text-xs text-[#5c6b7a] mt-1">사용처: main.py, connection_manager, message_handler</span> </div> <div class="bg-[#e8f4f8] rounded-xl p-4 border-l-4 border-[#2d6a7a]"> <strong class="block mb-1.5 text-[#2d6a7a]">타입 힌트</strong> <span class="text-sm">변수·인자·반환 타입을 str, Dict, Optional[T] 등으로 표기.</span> <span class="block text-xs text-[#5c6b7a] mt-1">사용처: 전 모듈</span> </div> <div class="bg-[#e8f4f8] rounded-xl p-4 border-l-4 border-[#2d6a7a]"> <strong class="block mb-1.5 text-[#2d6a7a]">Enum</strong> <span class="text-sm">고정된 상수 집합(역할, 게임 상태, 카드 타입 등).</span> <span class="block text-xs text-[#5c6b7a] mt-1">사용처: utils/constants.py</span> </div> <div class="bg-[#e8f4f8] rounded-xl p-4 border-l-4 border-[#2d6a7a]"> <strong class="block mb-1.5 text-[#2d6a7a]">클래스와 인스턴스</strong> <span class="text-sm">GameManager, ConnectionManager 등이 상태를 갖는 객체.</span> <span class="block text-xs text-[#5c6b7a] mt-1">사용처: app 전역 인스턴스</span> </div> </div> </section> <section id="fastapi" class="mt-6 pt-6 sm:mt-8 sm:pt-8 md:mt-12 md:pt-8"> <h2 class="text-base font-bold mb-3 pb-2 border-b-2 border-[#2d6a7a] sm:text-lg md:text-xl md:mb-4">6. FastAPI 개념</h2> <p class="mb-4">FastAPI의 핵심 개념과 이 레포에서의 사용 위치입니다.</p> <div class="bg-white rounded-xl shadow-sm p-4 my-4 overflow-x-auto sm:p-5 sm:my-5 md:p-6 md:my-5"> <pre class="mermaid">flowchart TB
   subgraph FastAPI 흐름
     A[클라이언트 요청]
     B[ASGI]
@@ -399,78 +113,7 @@ flowchart TB
     F[JSON/WS 응답]
   end
   A --> B --> C --> D --> E --> F
-        </pre>
-      </div>
-    </section>
-
-    <section id="libraries">
-      <h2>7. 라이브러리별 개념과 활용</h2>
-      <p>requirements.txt 기준으로, 각 라이브러리가 무엇이고 이 프로젝트에서 어디에 쓰이는지 정리했습니다.</p>
-      <div class="cards">
-        <div class="card">
-          <h4>FastAPI</h4>
-          <div class="meta">웹 프레임워크</div>
-          <p><strong>역할:</strong> HTTP·WebSocket 라우팅, 요청/응답, 자동 스키마 생성.</p>
-          <p><strong>활용:</strong> <code>main.py</code>에서 앱 생성, GET/WS 엔드포인트, CORS, <code>WebSocket</code>, <code>Query</code> 사용.</p>
-        </div>
-        <div class="card">
-          <h4>Uvicorn</h4>
-          <div class="meta">ASGI 서버</div>
-          <p><strong>역할:</strong> ASGI 앱을 실행해 네트워크 I/O를 처리하고, async 라이프사이클을 돌립니다.</p>
-          <p><strong>활용:</strong> <code>uvicorn app.main:app --host 0.0.0.0 --port 8088</code> 로 서버 기동. <code>main.py</code>의 <code>if __name__ == "__main__"</code>에서도 호출.</p>
-        </div>
-        <div class="card">
-          <h4>Pydantic</h4>
-          <div class="meta">데이터 검증·설정</div>
-          <p><strong>역할:</strong> 모델 클래스로 타입·검증·직렬화를 정의합니다.</p>
-          <p><strong>활용:</strong> <code>models/</code>의 Game, Player, Card, Role — 필드 타입과 기본값. API 스키마 자동 생성에 사용.</p>
-        </div>
-        <div class="card">
-          <h4>pydantic-settings</h4>
-          <div class="meta">설정 로드</div>
-          <p><strong>역할:</strong> 환경 변수·.env 파일을 Pydantic 모델로 로드합니다.</p>
-          <p><strong>활용:</strong> <code>config.py</code>의 <code>Settings(BaseSettings)</code> — HOST, PORT, CORS_ORIGINS, WS_MAX_CONNECTIONS 등.</p>
-        </div>
-        <div class="card">
-          <h4>python-dotenv</h4>
-          <div class="meta">.env 로드</div>
-          <p><strong>역할:</strong> 프로젝트 루트의 <code>.env</code>를 읽어 <code>os.environ</code>에 넣습니다.</p>
-          <p><strong>활용:</strong> pydantic-settings가 .env를 쓰도록 할 때 함께 사용. <code>Settings</code>의 <code>env_file=".env"</code>와 연동.</p>
-        </div>
-        <div class="card">
-          <h4>websockets</h4>
-          <div class="meta">WebSocket 프로토콜</div>
-          <p><strong>역할:</strong> WebSocket 핸드셰이크·프레임 처리를 위한 저수준 라이브러리.</p>
-          <p><strong>활용:</strong> FastAPI/Starlette이 내부적으로 사용. 이 프로젝트에서는 FastAPI의 <code>WebSocket</code> API만 직접 사용.</p>
-        </div>
-        <div class="card">
-          <h4>python-multipart</h4>
-          <div class="meta">폼·파일 업로드</div>
-          <p><strong>역할:</strong> multipart/form-data 파싱.</p>
-          <p><strong>활용:</strong> 파일 업로드나 폼 필드가 있는 엔드포인트를 쓸 때 FastAPI가 사용. 현재 프로젝트에서는 사용하지 않아도 의존성으로 포함 가능.</p>
-        </div>
-        <div class="card">
-          <h4>loguru</h4>
-          <div class="meta">로깅</div>
-          <p><strong>역할:</strong> 구조화된 로그, 파일·레벨 설정이 쉬운 로거.</p>
-          <p><strong>활용:</strong> 필요 시 <code>from loguru import logger</code>로 예외·디버그 로그 출력. (현재 코드에서는 print/traceback도 사용)</p>
-        </div>
-        <div class="card">
-          <h4>pytest / pytest-asyncio</h4>
-          <div class="meta">테스트</div>
-          <p><strong>역할:</strong> 단위·통합 테스트, async 테스트 실행.</p>
-          <p><strong>활용:</strong> <code>tests/</code>에서 FastAPI TestClient, 게임 로직 테스트 등에 사용.</p>
-        </div>
-        <div class="card">
-          <h4>python-jose / passlib</h4>
-          <div class="meta">JWT·비밀번호 해싱</div>
-          <p><strong>역할:</strong> JWT 발급·검증, bcrypt 등 비밀번호 해싱.</p>
-          <p><strong>활용:</strong> 인증·로그인 기능을 추가할 때 사용. 현재 게임 API에는 미사용.</p>
-        </div>
-      </div>
-      <div class="diagram-wrap">
-        <pre class="mermaid">
-flowchart LR
+      </pre> </div> </section> <section id="libraries" class="mt-6 pt-6 sm:mt-8 sm:pt-8 md:mt-12 md:pt-8"> <h2 class="text-base font-bold mb-3 pb-2 border-b-2 border-[#2d6a7a] sm:text-lg md:text-xl md:mb-4">7. 라이브러리 활용</h2> <p class="mb-4">requirements.txt 기준 각 라이브러리 역할과 사용 위치입니다.</p> <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"> <div class="bg-white border border-[#e6e9ef] rounded-xl p-4 sm:p-5 shadow-sm"> <h4 class="text-base font-semibold text-[#2d6a7a] mb-2">FastAPI</h4> <p class="text-xs text-[#5c6b7a] mb-2">웹 프레임워크</p> <p class="text-sm mb-2"><strong>역할:</strong> HTTP·WebSocket 라우팅, 요청/응답.</p> <p class="text-sm"><strong>활용:</strong> main.py에서 앱 생성, 엔드포인트 정의.</p> </div> <div class="bg-white border border-[#e6e9ef] rounded-xl p-4 sm:p-5 shadow-sm"> <h4 class="text-base font-semibold text-[#2d6a7a] mb-2">Uvicorn</h4> <p class="text-xs text-[#5c6b7a] mb-2">ASGI 서버</p> <p class="text-sm mb-2"><strong>역할:</strong> ASGI 앱 실행, 네트워크 I/O 처리.</p> <p class="text-sm"><strong>활용:</strong> uvicorn app.main:app --port 8088</p> </div> <div class="bg-white border border-[#e6e9ef] rounded-xl p-4 sm:p-5 shadow-sm"> <h4 class="text-base font-semibold text-[#2d6a7a] mb-2">Pydantic</h4> <p class="text-xs text-[#5c6b7a] mb-2">데이터 검증·설정</p> <p class="text-sm mb-2"><strong>역할:</strong> 모델 클래스로 타입·검증·직렬화.</p> <p class="text-sm"><strong>활용:</strong> models/의 Game, Player, Card, Role</p> </div> <div class="bg-white border border-[#e6e9ef] rounded-xl p-4 sm:p-5 shadow-sm"> <h4 class="text-base font-semibold text-[#2d6a7a] mb-2">pydantic-settings</h4> <p class="text-xs text-[#5c6b7a] mb-2">설정 로드</p> <p class="text-sm mb-2"><strong>역할:</strong> 환경 변수·.env를 Pydantic 모델로 로드.</p> <p class="text-sm"><strong>활용:</strong> config.py의 Settings</p> </div> </div> <div class="bg-white rounded-xl shadow-sm p-4 my-4 overflow-x-auto sm:p-5 sm:my-5 md:p-6 md:my-5"> <pre class="mermaid">flowchart LR
   subgraph 런타임
     U[uvicorn]
     F[FastAPI]
@@ -490,13 +133,6 @@ flowchart LR
   PS --> M
   P --> G
   D --> PS
-        </pre>
-      </div>
-    </section>
-
-    <footer>
-      장부의 무게 백엔드 — 프로젝트 구조 · 흐름 · Python/FastAPI/라이브러리 개념 시각화. 브라우저에서 이 파일을 열면 Mermaid 다이어그램이 자동으로 렌더링됩니다.
-    </footer>
-  </div>
-</body>
-</html>
+      </pre> </div> </section> </main> <footer class="text-center py-5 px-4 sm:py-6 text-[#5c6b7a] text-xs sm:text-sm">
+장부의 무게 백엔드 — 프로젝트 구조 · 흐름 · Python/FastAPI/라이브러리 개념 시각화
+</footer>  </body></html>

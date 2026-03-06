@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+/* 반응형 기준: 폰(<640px) | 탭(640~1024px) | PC(1024px+) */
+
+/* Mermaid 다이어그램 모바일 터치 스크롤 */
+.mermaid {
+  min-width: min(100%, 320px);
+}
+
+/* 햄버거 드롭다운: PC(1024px+)에서는 항상 숨김 */
+@media (min-width: 1024px) {
+  .gnb-dropdown {
+    display: none !important;
+  }
+}

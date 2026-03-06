@@ -2,16 +2,17 @@
 
 ## 보는 방법
 
-- **권장**: 프로젝트 루트에서 HTTP 서버를 띄운 뒤 브라우저로 접속하면, Mermaid 다이어그램이 정상적으로 렌더링됩니다.
+- **권장**: FastAPI 서버 실행 후 접속
 
   ```bash
-  # 프로젝트 루트(ledger-weight-back-end)에서
-  python -m http.server 8000
+  uvicorn app.main:app --host 0.0.0.0 --port 8088
   ```
-  브라우저에서 **http://localhost:8000/docs/visual-guide/** 로 이동한 뒤 `index.html`을 클릭하거나,  
-  **http://localhost:8000/docs/visual-guide/index.html** 로 직접 접속하세요.
+  브라우저에서 **http://localhost:8088/docs-view/** 로 문서 대시보드에 접속한 뒤 "시각화 가이드 열기"를 클릭하거나,  
+  **http://localhost:8088/docs-view/visual-guide/index.html** 로 직접 접속하세요.
 
-- 또는 `index.html` 파일을 더블클릭해서 열 수 있으나, 일부 환경에서는 CDN 스크립트 로드가 막혀 다이어그램이 안 그려질 수 있습니다. 그 경우 위처럼 로컬 서버를 사용하세요.
+- **대안**: 프로젝트 루트에서 `python -m http.server 8000` 실행 후 `http://localhost:8000/docs/visual-guide/index.html` 접속
+
+- 또는 `index.html` 파일을 더블클릭해서 열 수 있으나, 일부 환경에서는 CDN 스크립트 로드가 막혀 다이어그램이 안 그려질 수 있습니다.
 
 ## 포함 내용
 

@@ -1,72 +1,58 @@
 # 장부의 무게 프로젝트 문서
 
-이 디렉토리는 프로젝트의 모든 기술 문서를 포함합니다.
+이 디렉토리는 프로젝트의 모든 기술 문서를 포함합니다. docs와 logs를 일원화하여 관리합니다.
+
+---
 
 ## 문서 구조
 
-### 현재 생성된 문서
-
 ```
 docs/
-├── README.md                    # 이 파일 (문서 가이드)
-├── PROJECT_OVERVIEW.md          # 프로젝트 개요 및 핵심 개념
-├── DEVELOPMENT_PLAN.md          # 6주 개발 계획서
-├── architecture/                # 아키텍처 설계
-│   └── system-design.md        # ✅ 시스템 아키텍처 (의사결정, 트러블슈팅, 성능 고려사항 포함)
-├── database/                    # 데이터베이스 설계 (준비 중)
-│   └── (스키마 설계 문서 예정)
-├── fastapi/                     # FastAPI 구현 문서
-│   ├── best-practices.md       # ✅ FastAPI 베스트 프랙티스 적용
-│   └── features/               # 기능별 문서
-│       ├── project-structure.md # ✅ 프로젝트 구조 설계 (코드 예시, 의사결정 기록 포함)
-│       ├── models.md            # ✅ 모델 클래스 구현 (Role, Card, Player, Game)
-│       ├── card-manager.md      # ✅ 카드 관리자 구현 (덱 생성, 셔플, 드로우)
-│       ├── game-manager.md      # ✅ 게임 매니저 구현 (게임 생성, 초기화, 승리 조건)
-│       ├── turn-manager.md      # ✅ 턴 관리자 구현 (턴 순서, 턴 단계, 카드 드로우)
-│       └── action-handler.md    # ✅ 액션 핸들러 구현 (카드 사용, 공격/방어 처리)
-└── deployment/                  # 배포 관련 (준비 중)
-    └── (배포 가이드 예정)
+├── README.md              # 이 파일
+├── INDEX.md               # 빠른 탐색 인덱스 (에이전트 참조 가이드 포함)
+├── index.html             # 문서 대시보드 (서버 /docs-view/ 로 접근)
+├── visual-guide/          # 시각화 가이드 (Mermaid 다이어그램)
+├── concepts/              # 학습용 개념 (초보자급)
+│   ├── python.md
+│   ├── fastapi.md
+│   ├── github-git.md
+│   ├── docker.md
+│   ├── pydantic.md
+│   └── websocket.md
+├── project/               # 프로젝트 문서
+│   ├── overview.md
+│   ├── architecture/
+│   ├── planning/
+│   └── implementation/
+├── operations/            # 운영/배포
+├── changelog/             # 날짜별 작업일지 (기존 logs 통합)
+└── archive/               # 보관 문서
 ```
 
-**참고**: 프로젝트 루트의 `logs/` 폴더에는 날짜별 작업일지가 저장됩니다.
-- 구조: `logs/YYYY/MM/DD.md`
-- 예시: `logs/2025/12/11.md` - 2025년 12월 11일 작업일지
+---
 
-### 문서 상태
+## 문서 대시보드 접근
 
-| 문서 | 상태 | 설명 |
-|------|------|------|
-| PROJECT_OVERVIEW.md | ✅ 완료 | 프로젝트 개요, 용어 변환, 역할 및 승리 조건 |
-| DEVELOPMENT_PLAN.md | ✅ 완료 | 6주 개발 계획, Phase별 작업 목록 |
-| architecture/system-design.md | ✅ 완료 | 시스템 아키텍처, 의사결정, 트러블슈팅, 성능 고려사항 |
-| fastapi/best-practices.md | ✅ 완료 | FastAPI 베스트 프랙티스 적용 사항 |
-| fastapi/features/project-structure.md | ✅ 완료 | 프로젝트 구조 설계, 코드 예시, 의사결정 기록 |
-| fastapi/features/models.md | ✅ 완료 | 모델 클래스 구현 문서 |
-| fastapi/features/card-manager.md | ✅ 완료 | 카드 관리자 구현 문서 |
-| fastapi/features/game-manager.md | ✅ 완료 | 게임 매니저 구현 문서 |
-| fastapi/features/turn-manager.md | ✅ 완료 | 턴 관리자 구현 문서 |
-| fastapi/features/action-handler.md | ✅ 완료 | 액션 핸들러 구현 문서 |
-| architecture/api-design.md | ⏳ 예정 | API 설계 원칙 |
-| database/schema.md | ⏳ 예정 | 데이터베이스 스키마 설계 |
-| fastapi/features/websocket.md | ✅ 완료 | WebSocket 구현 |
-| deployment/deployment.md | ⏳ 예정 | 배포 가이드 |
-| FRONTEND_COORDINATION_PLAN.md | ✅ 완료 | 프론트엔드 연동 작업 계획 |
-| NAS_SERVER_SETUP_GUIDE.md | ✅ 완료 | NAS 서버 구축 가이드 |
-| DATABASE_RECOMMENDATION.md | ✅ 완료 | 데이터베이스 선택 가이드 |
-| DEPLOYMENT_CHECKLIST_RESPONSE.md | ✅ 완료 | 배포 전 확인 사항 답변 |
+서버 실행 후 다음 URL로 접속:
 
-## 문서 작성 가이드
+- **대시보드**: `http://localhost:8088/docs-view/`
+- **시각화 가이드**: `http://localhost:8088/docs-view/visual-guide/index.html`
+- **API 문서 (Swagger)**: `http://localhost:8088/docs`
 
-각 문서에는 다음 내용을 포함합니다:
+---
 
-### 필수 항목
-- **코드 예시**: 실제 구현 코드 스니펫
-- **의사결정 기록**: 왜 이 방식을 선택했는지
-- **트러블슈팅**: 문제와 해결 과정
-- **성능 고려사항**: 최적화 포인트
+## changelog (변경 이력)
 
-### 문서 작성 원칙
-1. 구현 전: 설계 문서 작성
-2. 구현 중: 코드와 함께 문서 업데이트
-3. 구현 후: 최종 정리 및 개선점 기록
+기존 `logs/` 폴더의 날짜별 작업일지가 `docs/changelog/`로 통합되었습니다.
 
+- **형식**: `changelog/YYYY-MM-DD.md`
+- **내용**: 작업 시간, 완료/진행 작업, 이슈·해결, 다음 계획, 메모
+
+---
+
+## 에이전트 참조
+
+- **INDEX.md**: 섹션별 경로, 키워드, 1줄 요약
+- **참조 시점**: FastAPI 수정 → concepts/fastapi.md, project/implementation/
+- **참조 시점**: 게임 로직 → project/implementation/
+- **참조 시점**: 배포/운영 → operations/

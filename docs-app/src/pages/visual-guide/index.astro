@@ -1,0 +1,349 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="장부의 무게 — 시각화 가이드" description="프로젝트 구성 · 요청 흐름 · Python/FastAPI/라이브러리 개념">
+  <script type="module" slot="head" src="/docs-view/mermaid-init.js" />
+  <script slot="head" is:inline>
+    (function(){function apply(){var g=document.getElementById('gnb');if(!g)return;var desk=g.querySelector('.gnb-desktop-wrap');var mob=g.querySelector('.gnb-mobile-wrap');if(desk&&mob){var w=window.innerWidth;var mobile=w<1024;desk.style.cssText=mobile?'display:none!important':'display:flex!important';mob.style.cssText=mobile?'display:flex!important':'display:none!important';}}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',apply);}else{apply();}window.matchMedia('(max-width:1023px)').addListener(apply);window.addEventListener('resize',apply);})();
+  </script>
+  <header class="bg-gradient-to-br from-[#1a2a35] to-[#2d4a52] text-white py-8 px-4 text-center sm:py-10 sm:px-6 md:py-12 md:px-6">
+  <div class="flex justify-start mb-3 sm:mb-4">
+    <a href="../" class="text-white/90 text-sm hover:text-white no-underline touch-manipulation py-1">← 대시보드</a>
+  </div>
+  <h1 class="text-lg font-bold m-0 mb-2 sm:text-xl md:text-2xl">장부의 무게 — 백엔드 시각화 가이드</h1>
+  <p class="m-0 opacity-90 text-xs sm:text-sm">프로젝트 구성 · 요청 흐름 · Python/FastAPI/라이브러리 개념을 한눈에</p>
+</header>
+
+<nav class="sticky top-0 z-10 bg-white border-b border-[#e6e9ef]" id="gnb">
+  <style is:global>
+    /* 모바일(<1024px): 햄버거만, GNB 링크 숨김 */
+    @media (max-width: 1023px) {
+      #gnb .gnb-desktop-wrap { display: none !important; }
+      #gnb .gnb-mobile-wrap { display: flex !important; }
+    }
+    /* PC(>=1024px): GNB 링크만, 햄버거 숨김 */
+    @media (min-width: 1024px) {
+      #gnb .gnb-desktop-wrap { display: flex !important; }
+      #gnb .gnb-mobile-wrap { display: none !important; }
+    }
+  </style>
+  <!-- 모바일: 햄버거 버튼 -->
+  <div class="gnb-mobile-wrap flex items-center justify-between py-2.5 px-3" style="display:none">
+    <button
+      type="button"
+      id="hamburger-btn"
+      class="p-2 -m-2 rounded-lg text-[#2d6a7a] hover:bg-[#e8f4f8] touch-manipulation aria-label="메뉴 열기"
+      aria-expanded="false"
+      aria-controls="gnb-dropdown"
+    >
+      <svg id="hamburger-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+      <svg id="close-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+  <!-- PC: GNB 링크 -->
+  <div class="gnb-desktop-wrap flex flex-wrap justify-center gap-4 py-3 px-6" style="display:none" role="menu">
+      <a href="#overview" class="gnb-link text-[#2d6a7a] text-sm font-medium no-underline hover:underline py-2 touch-manipulation" role="menuitem">개요</a>
+      <a href="#structure" class="gnb-link text-[#2d6a7a] text-sm font-medium no-underline hover:underline py-2 touch-manipulation" role="menuitem">프로젝트 구조</a>
+      <a href="#flow-http" class="gnb-link text-[#2d6a7a] text-sm font-medium no-underline hover:underline py-2 touch-manipulation" role="menuitem">HTTP 흐름</a>
+      <a href="#flow-ws" class="gnb-link text-[#2d6a7a] text-sm font-medium no-underline hover:underline py-2 touch-manipulation" role="menuitem">WebSocket 흐름</a>
+      <a href="#python" class="gnb-link text-[#2d6a7a] text-sm font-medium no-underline hover:underline py-2 touch-manipulation" role="menuitem">Python 개념</a>
+      <a href="#fastapi" class="gnb-link text-[#2d6a7a] text-sm font-medium no-underline hover:underline py-2 touch-manipulation" role="menuitem">FastAPI 개념</a>
+      <a href="#libraries" class="gnb-link text-[#2d6a7a] text-sm font-medium no-underline hover:underline py-2 touch-manipulation" role="menuitem">라이브러리 활용</a>
+  </div>
+  <div id="gnb-dropdown" class="gnb-dropdown hidden border-t border-[#e6e9ef] bg-white py-3 px-4 flex flex-col gap-1">
+    <a href="#overview" class="gnb-link text-[#2d6a7a] text-sm font-medium py-3 px-2 rounded-lg hover:bg-[#e8f4f8] touch-manipulation">개요</a>
+    <a href="#structure" class="gnb-link text-[#2d6a7a] text-sm font-medium py-3 px-2 rounded-lg hover:bg-[#e8f4f8] touch-manipulation">프로젝트 구조</a>
+    <a href="#flow-http" class="gnb-link text-[#2d6a7a] text-sm font-medium py-3 px-2 rounded-lg hover:bg-[#e8f4f8] touch-manipulation">HTTP 흐름</a>
+    <a href="#flow-ws" class="gnb-link text-[#2d6a7a] text-sm font-medium py-3 px-2 rounded-lg hover:bg-[#e8f4f8] touch-manipulation">WebSocket 흐름</a>
+    <a href="#python" class="gnb-link text-[#2d6a7a] text-sm font-medium py-3 px-2 rounded-lg hover:bg-[#e8f4f8] touch-manipulation">Python 개념</a>
+    <a href="#fastapi" class="gnb-link text-[#2d6a7a] text-sm font-medium py-3 px-2 rounded-lg hover:bg-[#e8f4f8] touch-manipulation">FastAPI 개념</a>
+    <a href="#libraries" class="gnb-link text-[#2d6a7a] text-sm font-medium py-3 px-2 rounded-lg hover:bg-[#e8f4f8] touch-manipulation">라이브러리 활용</a>
+  </div>
+</nav>
+
+<script>
+  (function () {
+    const btn = document.getElementById('hamburger-btn');
+    const dropdown = document.getElementById('gnb-dropdown');
+    const hamburgerIcon = document.getElementById('hamburger-icon');
+    const closeIcon = document.getElementById('close-icon');
+    const links = document.querySelectorAll('.gnb-link');
+
+    function openMenu() {
+      dropdown?.classList.remove('hidden');
+      hamburgerIcon?.classList.add('hidden');
+      closeIcon?.classList.remove('hidden');
+      btn?.setAttribute('aria-expanded', 'true');
+      btn?.setAttribute('aria-label', '메뉴 닫기');
+    }
+
+    function closeMenu() {
+      dropdown?.classList.add('hidden');
+      hamburgerIcon?.classList.remove('hidden');
+      closeIcon?.classList.add('hidden');
+      btn?.setAttribute('aria-expanded', 'false');
+      btn?.setAttribute('aria-label', '메뉴 열기');
+    }
+
+    function toggleMenu() {
+      if (dropdown?.classList.contains('hidden')) openMenu();
+      else closeMenu();
+    }
+
+    btn?.addEventListener('click', toggleMenu);
+    links.forEach((link) => link.addEventListener('click', () => {
+      if (window.matchMedia('(max-width: 1023px)').matches) closeMenu();
+    }));
+  })();
+</script>
+
+<main class="max-w-4xl mx-auto px-4 py-6 pb-16 sm:px-6 sm:pb-20 md:px-6">
+  <section id="overview" class="mt-6 pt-6 sm:mt-8 sm:pt-8 md:mt-12 md:pt-8">
+    <h2 class="text-base font-bold mb-3 pb-2 border-b-2 border-[#2d6a7a] sm:text-lg md:text-xl md:mb-4">1. 프로젝트 개요</h2>
+    <p class="mb-4">
+      장부의 무게는 <strong>BANG!</strong> 카드 게임을 웹으로 구현한 실시간 멀티플레이 백엔드입니다. <strong>FastAPI</strong>로 HTTP API와 <strong>WebSocket</strong>을 제공하며, 클라이언트는 로비 접속 → 게임 참가 → 카드 액션을 메시지로 주고받습니다.
+    </p>
+    <div class="bg-white rounded-xl shadow-sm p-4 my-4 overflow-x-auto sm:p-5 sm:my-5 md:p-6 md:my-5">
+      <pre class="mermaid">
+flowchart LR
+  subgraph 클라이언트
+    A[브라우저/앱]
+  end
+  subgraph 서버
+    B[FastAPI]
+    C[GameManager]
+    D[ConnectionManager]
+  end
+  A -->|HTTP /health, / | B
+  A -->|WebSocket /lobby/game_id | B
+  B --> C
+  B --> D
+      </pre>
+    </div>
+  </section>
+
+  <section id="structure" class="mt-6 pt-6 sm:mt-8 sm:pt-8 md:mt-12 md:pt-8">
+    <h2 class="text-base font-bold mb-3 pb-2 border-b-2 border-[#2d6a7a] sm:text-lg md:text-xl md:mb-4">2. 프로젝트 구조</h2>
+    <p class="mb-4">
+      아래는 <code class="bg-[#e8f4f8] px-1.5 py-0.5 rounded">app</code> 패키지 기준 디렉터리와 역할입니다. <code class="bg-[#e8f4f8] px-1.5 py-0.5 rounded">main.py</code>가 진입점이고, 게임 로직(<code class="bg-[#e8f4f8] px-1.5 py-0.5 rounded">game</code>), 연결/메시지(<code class="bg-[#e8f4f8] px-1.5 py-0.5 rounded">websocket</code>), 데이터 모델(<code class="bg-[#e8f4f8] px-1.5 py-0.5 rounded">models</code>)로 분리되어 있습니다.
+    </p>
+    <div class="bg-white rounded-xl shadow-sm p-4 my-4 overflow-x-auto sm:p-5 sm:my-5 md:p-6 md:my-5">
+      <pre class="mermaid">
+flowchart TB
+  subgraph app["app 패키지"]
+    main["main.py\n진입점 · 라우트 등록"]
+    config["config.py\nSettings · 환경변수"]
+    subgraph game["game/"]
+      gm["game_manager.py\n게임 생성·상태·승리"]
+      tm["turn_manager.py\n턴 순서·단계"]
+      cm["card_manager.py\n덱·핸드"]
+      ah["action_handler.py\n카드 액션 처리"]
+    end
+    subgraph websocket["websocket/"]
+      conn["connection_manager.py\n연결 수락·브로드캐스트"]
+      msg["message_handler.py\n메시지 타입별 처리"]
+    end
+    subgraph models["models/"]
+      m_game["game.py"]
+      m_player["player.py"]
+      m_card["card.py"]
+      m_role["role.py"]
+    end
+    subgraph utils["utils/"]
+      constants["constants.py\nRole, GameState, CardType 등"]
+    end
+  end
+  main --> config
+  main --> gm
+  main --> conn
+  main --> msg
+  msg --> gm
+  msg --> tm
+  msg --> ah
+  gm --> cm
+  gm --> m_game
+  ah --> tm
+  ah --> cm
+  conn --> constants
+  msg --> constants
+  gm --> constants
+      </pre>
+    </div>
+  </section>
+
+  <section id="flow-http" class="mt-6 pt-6 sm:mt-8 sm:pt-8 md:mt-12 md:pt-8">
+    <h2 class="text-base font-bold mb-3 pb-2 border-b-2 border-[#2d6a7a] sm:text-lg md:text-xl md:mb-4">3. HTTP 요청 흐름</h2>
+    <p class="mb-4">
+      클라이언트가 <code class="bg-[#e8f4f8] px-1.5 py-0.5 rounded">GET /</code> 또는 <code class="bg-[#e8f4f8] px-1.5 py-0.5 rounded">GET /health</code>를 호출할 때의 흐름입니다.
+    </p>
+    <div class="bg-white rounded-xl shadow-sm p-4 my-4 overflow-x-auto sm:p-5 sm:my-5 md:p-6 md:my-5">
+      <pre class="mermaid">
+sequenceDiagram
+  participant C as 클라이언트
+  participant U as Uvicorn
+  participant F as FastAPI
+  participant R as 라우트 핸들러
+
+  C->>U: GET /health
+  U->>F: ASGI 요청
+  F->>F: CORS 미들웨어
+  F->>R: health_check()
+  R->>R: return status healthy
+  R->>F: JSON 응답
+  F->>U: ASGI 응답
+  U->>C: 200 OK + JSON
+      </pre>
+    </div>
+  </section>
+
+  <section id="flow-ws" class="mt-6 pt-6 sm:mt-8 sm:pt-8 md:mt-12 md:pt-8">
+    <h2 class="text-base font-bold mb-3 pb-2 border-b-2 border-[#2d6a7a] sm:text-lg md:text-xl md:mb-4">4. WebSocket 메시지 흐름</h2>
+    <p class="mb-4">
+      로비 엔드포인트 <code class="bg-[#e8f4f8] px-1.5 py-0.5 rounded">/lobby/{'{'}game_id{'}'}?player=이름</code> 접속 시 연결 수락 → 자동 참가 → 이후 클라이언트 메시지를 <code class="bg-[#e8f4f8] px-1.5 py-0.5 rounded">MessageHandler</code>가 처리합니다.
+    </p>
+    <div class="bg-white rounded-xl shadow-sm p-4 my-4 overflow-x-auto sm:p-5 sm:my-5 md:p-6 md:my-5">
+      <pre class="mermaid">
+sequenceDiagram
+  participant C as 클라이언트
+  participant M as main.py
+  participant Conn as ConnectionManager
+  participant Msg as MessageHandler
+  participant GM as GameManager
+
+  C->>M: WS /lobby/game_1?player=홍길동
+  M->>Conn: connect(ws, player_id)
+  Conn->>C: accept()
+  M->>C: CONNECTION_ESTABLISHED
+  M->>Msg: handle_join_game(player_id, JOIN_GAME)
+  Msg->>GM: add_player_to_game / create_game
+  GM-->>Msg: 성공/실패
+  Msg-->>M: join_result
+  M->>C: ERROR 또는 계속
+
+  loop 메시지 루프
+    C->>M: JSON 메시지
+    M->>Msg: handle_message(player_id, message)
+    Msg->>GM: (action_handler 등)
+    Msg-->>M: result
+    M->>Conn: send_personal_message / broadcast
+    Conn->>C: JSON 응답
+  end
+
+  C->>M: 연결 종료
+  M->>Conn: disconnect(player_id)
+      </pre>
+    </div>
+    <p class="text-sm text-[#5c6b7a] mt-2">메시지 타입: JOIN_GAME, START_GAME, GET_GAME_STATE, PLAYER_ACTION, ADD_AI_PLAYER</p>
+  </section>
+
+  <section id="python" class="mt-6 pt-6 sm:mt-8 sm:pt-8 md:mt-12 md:pt-8">
+    <h2 class="text-base font-bold mb-3 pb-2 border-b-2 border-[#2d6a7a] sm:text-lg md:text-xl md:mb-4">5. Python 개념</h2>
+    <p class="mb-4">이 프로젝트에서 쓰이는 Python 개념과 사용처입니다.</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      <div class="bg-[#e8f4f8] rounded-xl p-4 border-l-4 border-[#2d6a7a]">
+        <strong class="block mb-1.5 text-[#2d6a7a]">async / await</strong>
+        <span class="text-sm">비동기 함수. I/O 대기 시 다른 코루틴이 실행됩니다.</span>
+        <span class="block text-xs text-[#5c6b7a] mt-1">사용처: main.py, connection_manager, message_handler</span>
+      </div>
+      <div class="bg-[#e8f4f8] rounded-xl p-4 border-l-4 border-[#2d6a7a]">
+        <strong class="block mb-1.5 text-[#2d6a7a]">타입 힌트</strong>
+        <span class="text-sm">변수·인자·반환 타입을 str, Dict, Optional[T] 등으로 표기.</span>
+        <span class="block text-xs text-[#5c6b7a] mt-1">사용처: 전 모듈</span>
+      </div>
+      <div class="bg-[#e8f4f8] rounded-xl p-4 border-l-4 border-[#2d6a7a]">
+        <strong class="block mb-1.5 text-[#2d6a7a]">Enum</strong>
+        <span class="text-sm">고정된 상수 집합(역할, 게임 상태, 카드 타입 등).</span>
+        <span class="block text-xs text-[#5c6b7a] mt-1">사용처: utils/constants.py</span>
+      </div>
+      <div class="bg-[#e8f4f8] rounded-xl p-4 border-l-4 border-[#2d6a7a]">
+        <strong class="block mb-1.5 text-[#2d6a7a]">클래스와 인스턴스</strong>
+        <span class="text-sm">GameManager, ConnectionManager 등이 상태를 갖는 객체.</span>
+        <span class="block text-xs text-[#5c6b7a] mt-1">사용처: app 전역 인스턴스</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="fastapi" class="mt-6 pt-6 sm:mt-8 sm:pt-8 md:mt-12 md:pt-8">
+    <h2 class="text-base font-bold mb-3 pb-2 border-b-2 border-[#2d6a7a] sm:text-lg md:text-xl md:mb-4">6. FastAPI 개념</h2>
+    <p class="mb-4">FastAPI의 핵심 개념과 이 레포에서의 사용 위치입니다.</p>
+    <div class="bg-white rounded-xl shadow-sm p-4 my-4 overflow-x-auto sm:p-5 sm:my-5 md:p-6 md:my-5">
+      <pre class="mermaid">
+flowchart TB
+  subgraph FastAPI 흐름
+    A[클라이언트 요청]
+    B[ASGI]
+    C[미들웨어]
+    D[라우트 매칭]
+    E[핸들러 실행]
+    F[JSON/WS 응답]
+  end
+  A --> B --> C --> D --> E --> F
+      </pre>
+    </div>
+  </section>
+
+  <section id="libraries" class="mt-6 pt-6 sm:mt-8 sm:pt-8 md:mt-12 md:pt-8">
+    <h2 class="text-base font-bold mb-3 pb-2 border-b-2 border-[#2d6a7a] sm:text-lg md:text-xl md:mb-4">7. 라이브러리 활용</h2>
+    <p class="mb-4">requirements.txt 기준 각 라이브러리 역할과 사용 위치입니다.</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      <div class="bg-white border border-[#e6e9ef] rounded-xl p-4 sm:p-5 shadow-sm">
+        <h4 class="text-base font-semibold text-[#2d6a7a] mb-2">FastAPI</h4>
+        <p class="text-xs text-[#5c6b7a] mb-2">웹 프레임워크</p>
+        <p class="text-sm mb-2"><strong>역할:</strong> HTTP·WebSocket 라우팅, 요청/응답.</p>
+        <p class="text-sm"><strong>활용:</strong> main.py에서 앱 생성, 엔드포인트 정의.</p>
+      </div>
+      <div class="bg-white border border-[#e6e9ef] rounded-xl p-4 sm:p-5 shadow-sm">
+        <h4 class="text-base font-semibold text-[#2d6a7a] mb-2">Uvicorn</h4>
+        <p class="text-xs text-[#5c6b7a] mb-2">ASGI 서버</p>
+        <p class="text-sm mb-2"><strong>역할:</strong> ASGI 앱 실행, 네트워크 I/O 처리.</p>
+        <p class="text-sm"><strong>활용:</strong> uvicorn app.main:app --port 8088</p>
+      </div>
+      <div class="bg-white border border-[#e6e9ef] rounded-xl p-4 sm:p-5 shadow-sm">
+        <h4 class="text-base font-semibold text-[#2d6a7a] mb-2">Pydantic</h4>
+        <p class="text-xs text-[#5c6b7a] mb-2">데이터 검증·설정</p>
+        <p class="text-sm mb-2"><strong>역할:</strong> 모델 클래스로 타입·검증·직렬화.</p>
+        <p class="text-sm"><strong>활용:</strong> models/의 Game, Player, Card, Role</p>
+      </div>
+      <div class="bg-white border border-[#e6e9ef] rounded-xl p-4 sm:p-5 shadow-sm">
+        <h4 class="text-base font-semibold text-[#2d6a7a] mb-2">pydantic-settings</h4>
+        <p class="text-xs text-[#5c6b7a] mb-2">설정 로드</p>
+        <p class="text-sm mb-2"><strong>역할:</strong> 환경 변수·.env를 Pydantic 모델로 로드.</p>
+        <p class="text-sm"><strong>활용:</strong> config.py의 Settings</p>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-4 my-4 overflow-x-auto sm:p-5 sm:my-5 md:p-6 md:my-5">
+      <pre class="mermaid">
+flowchart LR
+  subgraph 런타임
+    U[uvicorn]
+    F[FastAPI]
+  end
+  subgraph 설정·데이터
+    P[Pydantic]
+    PS[pydantic-settings]
+    D[python-dotenv]
+  end
+  subgraph 앱 레이어
+    M[main.py]
+    G[game / websocket]
+  end
+  U --> F
+  F --> M
+  M --> G
+  PS --> M
+  P --> G
+  D --> PS
+      </pre>
+    </div>
+  </section>
+</main>
+
+<footer class="text-center py-5 px-4 sm:py-6 text-[#5c6b7a] text-xs sm:text-sm">
+  장부의 무게 백엔드 — 프로젝트 구조 · 흐름 · Python/FastAPI/라이브러리 개념 시각화
+</footer>
+</Layout>

@@ -1,6 +1,14 @@
 # 장부의 무게 백엔드 — 프로덕션 이미지
 # Python 3.12-slim, 포트 8088 (nginx·서버와 동일)
 
+FROM node:20-slim AS docs-builder
+WORKDIR /app/docs-app
+COPY docs-app/package*.json ./
+RUN npm ci --omit=dev
+COPY docs-app/ .
+
+RUN npm run build
+
 FROM python:3.12-slim
 
 WORKDIR /app
@@ -11,6 +19,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # 앱 코드 복사
 COPY . .
+
+# docs-app/dist 빌드 결과물 복사 (node_modules는 .dockerignore로 제외)
+COPY --from=docs-builder /app/docs-app/dist docs-app/dist
 
 # non-root 사용자로 실행 (권한 최소화)
 RUN adduser --disabled-password --gecos "" appuser && chown -R appuser:appuser /app
