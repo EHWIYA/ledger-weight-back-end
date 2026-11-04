@@ -1,62 +1,56 @@
-# ledger-weight-back-end
+# Ledger Weight · 실시간 카드 게임 서버
 
-장부의 무게 - WebSocket 기반 실시간 카드 게임 백엔드 서버
+‘장부의 무게’는 BANG! 카드 게임을 바탕으로 만든 포트폴리오 프로젝트입니다.
+FastAPI와 WebSocket을 사용해 실시간 통신과 게임 로직을 처리하는 백엔드 서버입니다.
 
-## 📋 프로젝트 개요
+## 핵심 구성
 
-- **프로젝트명**: 장부의 무게 (Ledger Weight)
-- **기술 스택**: FastAPI + Python 3.8+
-- **통신 방식**: WebSocket 기반 실시간 통신
-- **원작**: BANG! 카드 게임
+- WebSocket 기반 플레이어 연결
+- 게임 로직과 WebSocket 메시지 처리
+- HTTP 상태 확인 API와 Swagger 문서
 
-## 🚀 빠른 시작
+| 영역 | 기술 |
+| --- | --- |
+| 언어·프레임워크 | Python, FastAPI |
+| 실시간 통신 | WebSocket |
+| 서버 실행 | Uvicorn |
 
-### 환경 설정
+## 구현 살펴보기
 
-1. **의존성 설치**
-   ```bash
-   pip install -r requirements.txt
-   ```
+- [프로젝트 문서](docs/README.md)
+- [문서 인덱스](docs/INDEX.md)
+- [서버 코드](app/)
+- [변경 이력](https://github.com/EHWIYA/ledger-weight-back-end/commits)
 
-2. **환경 변수 설정** (템플릿 파일명: `env.example`)
-   ```bash
-   cp env.example .env
-   # .env 파일을 열어서 필요한 설정 수정
-   ```
+게임 로직, 메시지 처리와 서버 구성은 코드와 문서에서 확인할 수 있습니다.
 
-3. **서버 실행**
-   ```bash
-   # 개발 모드
-   uvicorn app.main:app --reload
-   
-   # 프로덕션 모드
-   uvicorn app.main:app --host 0.0.0.0 --port 8088
-   ```
+## 로컬 실행
 
-### 주요 엔드포인트
+```bash
+pip install -r requirements.txt
+cp env.example .env
+# .env 파일을 열어서 필요한 설정 수정
+uvicorn app.main:app --reload
+```
 
-- `GET /` - 서버 정보
-- `GET /health` - 헬스 체크
-- `GET /docs` - API 문서 (Swagger UI)
-- `GET /redoc` - API 문서 (ReDoc)
-- `WS /ws/{player_id}` - WebSocket 연결
+NAS 배포 구성의 기본 포트는 `8088`이며, 실행 명령은 다음과 같습니다.
 
-## 📚 문서
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8088
+```
 
-자세한 문서는 [docs/](docs/) 디렉토리를 참고하세요.
+## Endpoint
 
-- [프로젝트 개요](docs/PROJECT_OVERVIEW.md)
-- [개발 계획서](docs/DEVELOPMENT_PLAN.md)
-- [NAS 서버 구축 가이드](docs/NAS_SERVER_SETUP_GUIDE.md)
+| 방식 | 경로 | 용도 |
+| --- | --- | --- |
+| GET | `/` | 서버 정보 |
+| GET | `/health` | 헬스 체크 |
+| GET | `/docs` | Swagger UI |
+| GET | `/redoc` | ReDoc |
+| WebSocket | `/ws/{player_id}` | 플레이어 연결 |
 
-## 🛠️ 개발 환경
+## 개발 환경
 
-- Python 3.8+
-- FastAPI 0.104.1
-- Uvicorn 0.24.0
-- 기본 포트: **8088** (로컬·Docker·배포 동일, `env.example` 참고)
-- 의존성 버전은 `requirements.txt` 기준. FastAPI/ruff 등은 호환성 확인 후 업그레이드 가능.
+기존 README의 기준은 Python 3.8+, FastAPI 0.104.1, Uvicorn 0.24.0입니다.
+실제 설치 버전은 저장소의 `requirements.txt`를 기준으로 확인하세요.
 
-## 📝 라이선스
-
-이 프로젝트는 포트폴리오 목적으로 개발되었습니다.
