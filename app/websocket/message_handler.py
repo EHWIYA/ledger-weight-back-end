@@ -4,9 +4,7 @@
 WebSocket 메시지를 처리하고 게임 상태를 업데이트합니다.
 """
 
-import json
-from typing import Dict, Optional
-from app.models.game import Game
+from typing import Dict
 from app.game.game_manager import GameManager
 from app.game.turn_manager import TurnManager
 from app.game.action_handler import ActionHandler
@@ -126,11 +124,9 @@ class MessageHandler:
             )
         
         # 게임 로직 컴포넌트 생성
-        from app.game.card_manager import CardManager
-        from app.game.turn_manager import TurnManager
-        from app.game.action_handler import ActionHandler
-        
         card_manager = self.game_manager.get_card_manager(game_id)
+        if card_manager is None:
+            return self._error(message="카드 관리자를 찾을 수 없습니다.", code="CARD_MANAGER_NOT_FOUND")
         turn_manager = TurnManager(game, card_manager)
         action_handler = ActionHandler(game, turn_manager, card_manager)
         
@@ -365,6 +361,8 @@ class MessageHandler:
         
         # 게임 시작 이벤트 로그 추가
         game = self.game_manager.get_game(game_id)  # 업데이트된 게임 상태 가져오기
+        if game is None:
+            return self._error(message="게임을 찾을 수 없습니다.", code="GAME_NOT_FOUND")
         game.add_event(
             f"게임이 시작되었습니다! 총 {len(game.players)}명의 플레이어가 참여합니다.",
             "notification"

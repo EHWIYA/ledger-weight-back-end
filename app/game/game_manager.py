@@ -9,7 +9,6 @@ import random
 from typing import Any, Dict, List, Optional
 from app.models.game import Game
 from app.models.player import Player
-from app.models.card import Card
 from app.game.card_manager import CardManager
 from app.utils.constants import (
     GameState,
@@ -53,6 +52,14 @@ class GameManager:
             id=game_id,
             state=GameState.WAITING,
             turn_state=TurnState.DRAW,
+            current_player_id=None,
+            turn_number=0,
+            last_event=None,
+            defending_player_id=None,
+            pending_required_missed=1,
+            pending_used_missed=0,
+            required_response=None,
+            pending_action=None,
         )
         
         # 카드 관리자 생성

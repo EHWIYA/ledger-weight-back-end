@@ -3,7 +3,7 @@
 """
 
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from app.config import settings
 

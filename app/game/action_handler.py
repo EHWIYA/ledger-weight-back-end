@@ -199,6 +199,8 @@ class ActionHandler:
         player = self.game.get_player(player_id)
         card_id = data.get("card_id")
         target_id = data.get("target_id")
+        if player is None:
+            return {"success": False, "message": "플레이어를 찾을 수 없습니다.", "event": None}
         
         if not card_id:
             return {
@@ -1099,6 +1101,8 @@ class ActionHandler:
         
         player = self.game.get_player(player_id)
         card_id = data.get("card_id")
+        if player is None:
+            return {"success": False, "message": "플레이어를 찾을 수 없습니다.", "event": None}
         
         if not card_id:
             return {
@@ -1446,6 +1450,8 @@ class ActionHandler:
                 "event": None,
             }
         
+        if not target_id:
+            return {"success": False, "message": "플레이어를 찾을 수 없습니다.", "event": None}
         attacker = self.game.get_player(player_id)
         target = self.game.get_player(target_id)
         if not attacker or not target:
@@ -1574,10 +1580,12 @@ class ActionHandler:
                 "event": None,
             }
         
+        player = self.game.get_player(player_id)
+        if player is None:
+            return {"success": False, "message": "플레이어를 찾을 수 없습니다.", "event": None}
         success = self.turn_manager.end_turn(player_id)
         
         if success:
-            player = self.game.get_player(player_id)
             event_message = f"{player.name}의 턴이 종료되었습니다."
             self.game.add_event(event_message, "notification")
             return {

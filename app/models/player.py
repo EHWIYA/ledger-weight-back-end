@@ -67,6 +67,7 @@ class Player(BaseModel):
             position=position,
             is_alive=True,
             is_bot=is_bot,
+            treasure=None,
         )
     
     def take_damage(self, damage: int = 1) -> bool:
@@ -188,6 +189,7 @@ class Player(BaseModel):
             role_name = str(self.role) if not hide_hand else None
         
         # 핸드 카드 (자신은 전체 정보, 다른 플레이어는 개수만)
+        hand: List[Dict] = []
         if hide_hand:
             hand = []  # 다른 플레이어는 빈 배열
         else:

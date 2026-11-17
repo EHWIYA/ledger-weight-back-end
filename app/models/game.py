@@ -6,7 +6,7 @@ from typing import List, Dict, Optional
 from pydantic import BaseModel, Field
 from app.models.player import Player
 from app.models.card import Card
-from app.utils.constants import GameState, TurnState, Role as RoleEnum
+from app.utils.constants import GameState, TurnState
 
 
 class Game(BaseModel):

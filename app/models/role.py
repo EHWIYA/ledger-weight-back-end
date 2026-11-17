@@ -2,6 +2,8 @@
 역할 (Role) 모델
 """
 
+from typing import Union
+
 from app.utils.constants import Role as RoleEnum
 
 
@@ -12,18 +14,19 @@ class Role:
     역할은 게임 시작 시 할당되며, 승리 조건을 결정합니다.
     """
     
-    def __init__(self, role: RoleEnum):
+    def __init__(self, role: Union[RoleEnum, str, "Role"]):
         """
         Args:
             role: 역할 Enum 값
         """
+        self.role: RoleEnum
+        self.name: str
         # role이 이미 Role 객체인 경우 처리
         if isinstance(role, Role):
             self.role = role.role
             self.name = role.name
         elif isinstance(role, str):
             # 문자열인 경우 RoleEnum으로 변환 시도
-            from app.utils.constants import Role as RoleEnum
             try:
                 # RoleEnum에서 해당 문자열을 찾기
                 for r in RoleEnum:
@@ -34,7 +37,7 @@ class Role:
                 # 찾지 못한 경우 기본값 사용
                 self.role = RoleEnum.SHERIFF
                 self.name = RoleEnum.SHERIFF.value
-            except:
+            except Exception:
                 self.role = RoleEnum.SHERIFF
                 self.name = RoleEnum.SHERIFF.value
         else:

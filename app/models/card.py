@@ -68,8 +68,10 @@ class Card(BaseModel):
         return self.range >= target_range
     
     def __str__(self) -> str:
-        suit_val = self.suit.value if hasattr(self.suit, 'value') else (self.suit if self.suit else "")
-        rank_val = self.rank.value if hasattr(self.rank, 'value') else (self.rank if self.rank else "")
+        suit = self.suit
+        rank = self.rank
+        suit_val = suit.value if suit is not None and hasattr(suit, 'value') else (suit if suit else "")
+        rank_val = rank.value if rank is not None and hasattr(rank, 'value') else (rank if rank else "")
         suit_str = f" {suit_val}" if suit_val else ""
         rank_str = f" {rank_val}" if rank_val else ""
         return f"{self.name}{suit_str}{rank_str}"

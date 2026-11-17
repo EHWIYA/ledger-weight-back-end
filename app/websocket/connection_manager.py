@@ -4,8 +4,8 @@
 WebSocket 연결을 관리하고 메시지를 브로드캐스트합니다.
 """
 
-from typing import Dict, Set
-from fastapi import WebSocket, WebSocketDisconnect
+from typing import Dict, Optional, Set
+from fastapi import WebSocket
 from app.utils.constants import WS_MAX_CONNECTIONS
 
 
@@ -86,7 +86,7 @@ class ConnectionManager:
         """
         return self.game_players.get(game_id, set())
     
-    def get_player_game(self, player_id: str) -> str:
+    def get_player_game(self, player_id: str) -> Optional[str]:
         """
         플레이어가 속한 게임 ID를 반환합니다.
         

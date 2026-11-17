@@ -6,7 +6,6 @@ python-dotenv는 별도 로드가 필요할 때만 사용하면 됩니다.
 """
 
 from pydantic_settings import BaseSettings
-from typing import Optional
 
 
 class Settings(BaseSettings):

@@ -1,0 +1,2 @@
+# TestClient 사용을 위한 Starlette 0.27 호환 버전. 운영 requirements 변경 금지.
+httpx==0.25.2
