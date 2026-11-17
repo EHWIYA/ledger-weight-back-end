@@ -1,6 +1,6 @@
 # OIDC 연결 전환 단계
 
-현재 main push와 workflow_dispatch는 OIDC 및 NAS 전송 연결만 검사한다. 앱 빌드, GHCR 게시, rsync, SSH 인증/명령, Compose, 배포/재시작을 수행하지 않는다. 기존 TS_AUTH_KEY와 NAS SSH secret은 보존하지만 이 workflow에서 사용하지 않는다.
+현재 main push와 workflow_dispatch는 OIDC 및 NAS 전송 연결만 검사한다. 앱 빌드, GHCR 게시, rsync, SSH 인증/명령, Compose, 배포/재시작을 수행하지 않는다. NAS SSH secret은 보존하지만 이 workflow에서 사용하지 않는다. 후속 사용처 점검에서 미사용 TS_AUTH_KEY repository secret은 삭제했다. 대응 Tailscale auth key의 ID/발급 계정은 특정하지 못했고 현재 로그인 계정의 키 화면에 항목이 없어 추가 폐기는 하지 않았다. OIDC credential은 유지한다.
 
 권한은 이 저장소의 main과 정확한 배포 workflow, Auth Keys Write 및 CI 태그 tag:ledger-ci에 한정한다. NAS TCP 22만 허용하고 SSH 공개 호스트 키를 고정한다. 잘못된 audience는 거부돼야 한다. JWT/단기 access token은 출력/저장하지 않는다.
 
