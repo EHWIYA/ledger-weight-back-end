@@ -1,87 +1,48 @@
-name: Deploy Ledger Weight Backend
+# 연결 전환 단계: 실제 빌드/배포/재시작은 별도 승인 전까지 실행하지 않는다.
+name: Ledger OIDC connection only
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ehwiya/ledger-weight-back-end
+permissions:
+  contents: read
+
+concurrency:
+  group: ledger-oidc-connect
+  cancel-in-progress: false
 
 jobs:
-  build-and-push:
+  oidc-connect:
+    name: OIDC and NAS transport verification
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
-      packages: write
-
+      id-token: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set short SHA
-        id: sha
-        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      - uses: actions/checkout@v4
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
 
-      - name: Build and push image
-        uses: docker/build-push-action@v5
+      - name: Verify identity and reject wrong audience
+        env:
+          TS_OIDC_CLIENT_ID: ${{ vars.TS_OIDC_CLIENT_ID }}
+          TS_OIDC_AUDIENCE: ${{ vars.TS_OIDC_AUDIENCE }}
+        run: python3 .github/scripts/check-ci-oidc.py identity
+
+      - name: Connect ephemeral CI node
+        uses: tailscale/github-action@064b10558093f38325e838ddea35486bdc6b1d5c # v4
         with:
-          context: .
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ env.SHORT_SHA }}
+          oauth-client-id: ${{ vars.TS_OIDC_CLIENT_ID }}
+          audience: ${{ vars.TS_OIDC_AUDIENCE }}
+          tags: tag:ledger-ci
+          timeout: "30s"
+          retry: "1"
 
-  deploy-to-nas:
-    runs-on: ubuntu-latest
-    needs: build-and-push
-
-    steps:
-      - name: Connect to Tailscale
-        run: |
-          curl -fsSL https://tailscale.com/install.sh | sh
-          sudo tailscale up --authkey=${{ secrets.TS_AUTH_KEY }} --accept-routes
-          sleep 5
-          tailscale status
-
-      - name: Deploy on NAS (docker compose)
-        uses: appleboy/ssh-action@v0.1.5
-        with:
-          host: 100.88.40.125
-          username: ${{ secrets.NAS_SERVER_USER }}
-          key: ${{ secrets.NAS_SERVER_SSH_KEY }}
-          port: 22
-          script: |
-            set -e
-            cd /home/iwh/ledger-weight
-
-            docker compose pull ledger-weight-api
-            docker compose up -d ledger-weight-api
-            docker compose ps
-
-            echo "Starting health check for ledger-weight-api..."
-
-            # 최대 10번, 2초 간격으로 /health 헬스 체크
-            for i in $(seq 1 10); do
-              if curl -fsS http://127.0.0.1:8088/health > /dev/null; then
-                echo "Health check passed"
-                echo "Deployment completed at $(date)"
-                exit 0
-              fi
-
-              echo "Health check failed, retrying... ($i/10)"
-              sleep 2
-            done
-
-            echo "Health check failed after retries, printing recent logs..."
-            docker compose logs --tail=200 ledger-weight-api || true
-            exit 1
+      - name: Verify NAS host key and network isolation
+        env:
+          NAS_SSH_HOST_KEYS: ${{ vars.NAS_SSH_HOST_KEYS }}
+        run: python3 .github/scripts/check-ci-oidc.py transport
